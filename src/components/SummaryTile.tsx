@@ -1,12 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import ExpenseForm from "@/components/ExpenseForm";
+import { Check, ChevronDown, Pencil, Trash2, X } from "lucide-react";
 import { Category, Expense } from "@/types/expense";
 
 interface SummaryTileProps {
+  id: string;
   title: string;
+  amount: number;
   expenses: Expense[];
+  isExpanded: boolean;
+  onToggle: (id: string) => void;
+  onDeleteExpense: (expenseId: string) => Promise<void>;
+  onEditExpense: (
+    expense: Expense,
+    updates: Partial<Pick<Expense, "amount" | "description" | "category">>,
+  ) => Promise<void>;
+  onBulkEditCategory: (
+    expenseIds: string[],
+    newCategory: Category,
+  ) => Promise<void>;
 }
 
 const categoryOrder: Category[] = [
@@ -19,20 +32,71 @@ const categoryOrder: Category[] = [
   "Other",
 ];
 
-const SummaryTile = ({ title, expenses }: SummaryTileProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [localExpenses, setLocalExpenses] = useState<Expense[]>(expenses);
+const SummaryTile = ({
+  id,
+  title,
+  amount,
+  expenses,
+  isExpanded,
+  onToggle,
+  onDeleteExpense,
+  onEditExpense,
+  onBulkEditCategory,
+}: SummaryTileProps) => {
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+  const [draftAmount, setDraftAmount] = useState<string>("");
+  const [draftDescription, setDraftDescription] = useState<string>("");
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [draftCategory, setDraftCategory] = useState<Category>("Food");
 
-  const total = useMemo(
-    () => localExpenses.reduce((sum, expense) => sum + expense.amount, 0),
-    [localExpenses],
-  );
+  const startEditingAmount = (expense: Expense) => {
+    setEditingExpenseId(expense.id);
+    setDraftAmount(expense.amount.toFixed(2));
+    setDraftDescription(expense.description);
+  };
+
+  const cancelEditingAmount = () => {
+    setEditingExpenseId(null);
+    setDraftAmount("");
+    setDraftDescription("");
+  };
+
+  const saveEditedAmount = async (expense: Expense) => {
+    const parsedAmount = Number(draftAmount);
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return;
+    }
+
+    await onEditExpense(expense, {
+      amount: parsedAmount,
+      description: draftDescription.trim(),
+    });
+    cancelEditingAmount();
+  };
+
+  const startEditingCategory = (category: Category) => {
+    setEditingCategory(category);
+    setDraftCategory(category);
+  };
+
+  const cancelEditingCategory = () => {
+    setEditingCategory(null);
+  };
+
+  const saveEditedCategory = async (expenseIds: string[]) => {
+    if (expenseIds.length === 0 || !editingCategory) {
+      return;
+    }
+
+    await onBulkEditCategory(expenseIds, draftCategory);
+    setEditingCategory(null);
+  };
 
   const groupedExpenses = useMemo(() => {
     return categoryOrder.reduce<Record<Category, Expense[]>>(
       (accumulator, category) => {
-        accumulator[category] = localExpenses.filter(
+        accumulator[category] = expenses.filter(
           (expense) => expense.category === category,
         );
         return accumulator;
@@ -47,13 +111,13 @@ const SummaryTile = ({ title, expenses }: SummaryTileProps) => {
         Other: [],
       },
     );
-  }, [localExpenses]);
+  }, [expenses]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
       <button
         type="button"
-        onClick={() => setIsExpanded((current) => !current)}
+        onClick={() => onToggle(id)}
         className="flex w-full items-center justify-between text-left"
       >
         <div>
@@ -61,7 +125,7 @@ const SummaryTile = ({ title, expenses }: SummaryTileProps) => {
             {title}
           </p>
           <p className="mt-1 text-3xl font-bold text-slate-900">
-            ${total.toFixed(2)}
+            ${amount.toFixed(2)}
           </p>
         </div>
         <span className="text-xl text-slate-500 transition-transform duration-300">
@@ -88,6 +152,11 @@ const SummaryTile = ({ title, expenses }: SummaryTileProps) => {
                   (sum, expense) => sum + expense.amount,
                   0,
                 );
+                const showCategoryEditTrigger =
+                  editingExpenseId !== null &&
+                  expensesInCategory.some(
+                    (expense) => expense.id === editingExpenseId,
+                  );
 
                 if (expensesInCategory.length === 0) {
                   return null;
@@ -96,9 +165,40 @@ const SummaryTile = ({ title, expenses }: SummaryTileProps) => {
                 return (
                   <div key={category} className="rounded-md bg-white p-3">
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm font-medium text-slate-800">
-                        {category}
-                      </p>
+                      {editingCategory === category ? (
+                        <div className="flex items-center gap-1">
+                          <select
+                            value={draftCategory}
+                            onChange={(event) =>
+                              setDraftCategory(event.target.value as Category)
+                            }
+                            className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                          >
+                            {categoryOrder.map((categoryOption) => (
+                              <option
+                                key={categoryOption}
+                                value={categoryOption}
+                              >
+                                {categoryOption}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-sm font-medium text-slate-800">
+                          <span>{category}</span>
+                          {showCategoryEditTrigger ? (
+                            <button
+                              type="button"
+                              onClick={() => startEditingCategory(category)}
+                              className="rounded p-0.5 text-slate-500 transition hover:bg-slate-100 hover:text-sky-700"
+                              aria-label="Edit category"
+                            >
+                              <ChevronDown size={12} />
+                            </button>
+                          ) : null}
+                        </div>
+                      )}
                       <p className="text-sm font-semibold text-slate-700">
                         ${categoryTotal.toFixed(2)}
                       </p>
@@ -108,46 +208,91 @@ const SummaryTile = ({ title, expenses }: SummaryTileProps) => {
                       {expensesInCategory.map((expense) => (
                         <li
                           key={expense.id}
-                          className="flex items-center justify-between text-xs text-slate-600"
+                          className="rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5 text-xs text-slate-600"
                         >
-                          <span>{expense.description || "No description"}</span>
-                          <span>${expense.amount.toFixed(2)}</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate">
+                              {expense.description || "No description"}
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              {editingExpenseId === expense.id ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={draftDescription}
+                                    onChange={(event) =>
+                                      setDraftDescription(event.target.value)
+                                    }
+                                    className="w-32 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={draftAmount}
+                                    onChange={(event) =>
+                                      setDraftAmount(event.target.value)
+                                    }
+                                    className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-right text-xs"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                    {                                      
+                                      void saveEditedAmount(expense)
+                                      void saveEditedCategory(
+                                        expensesInCategory.map((expense) => expense.id)
+                                      )
+                                    }
+                                    }
+                                    className="rounded p-1 text-emerald-600 transition hover:bg-emerald-50"
+                                    aria-label="Save amount"
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={cancelEditingAmount}
+                                    className="rounded p-1 text-slate-500 transition hover:bg-slate-200"
+                                    aria-label="Cancel edit"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void onDeleteExpense(expense.id)
+                                    }
+                                    className="rounded p-1 text-rose-500 transition hover:bg-rose-50"
+                                    aria-label="Delete expense"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                        startEditingCategory(category)
+                                        startEditingAmount(expense)}
+                                    }
+                                    className="rounded p-1 text-sky-600 transition hover:bg-sky-50"
+                                    aria-label="Edit expense amount"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </li>
                       ))}
                     </ul>
                   </div>
                 );
               })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowForm((current) => !current)}
-              className="mt-4 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
-            >
-              {showForm ? "Hide Form" : "Add Expense"}
-            </button>
-
-            <div
-              className={`grid transition-all duration-300 ease-out ${
-                showForm
-                  ? "mt-2 grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0"
-              }`}
-            >
-              <div className="overflow-hidden">
-                {showForm ? (
-                  <ExpenseForm
-                    onClose={() => setShowForm(false)}
-                    onOptimisticAdd={(optimisticExpense) => {
-                      setLocalExpenses((current) => [
-                        optimisticExpense,
-                        ...current,
-                      ]);
-                    }}
-                  />
-                ) : null}
-              </div>
             </div>
           </div>
         </div>

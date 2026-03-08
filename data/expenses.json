@@ -1,37 +1,23 @@
 [
   {
-    "id": "1",
-    "amount": 12.5,
-    "category": "Food",
-    "date": "2026-03-08T12:00:00Z",
-    "description": "Coffee and pastry"
-  },
-  {
-    "id": "2",
-    "amount": 45,
-    "category": "Transport",
-    "date": "2026-03-07T09:30:00Z",
-    "description": "Gas refill"
-  },
-  {
-    "id": "3",
-    "amount": 1200,
+    "amount": 1655,
     "category": "Housing",
-    "date": "2026-03-01T08:00:00Z",
-    "description": "Monthly rent"
-  },
-  {
-    "id": "4",
-    "amount": 68.75,
-    "category": "Utilities",
-    "date": "2026-03-06T18:15:00Z",
-    "description": "Electricity bill"
-  },
-  {
-    "amount": 2130,
-    "category": "Housing",
-    "date": "2026-03-08T19:00:00.000Z",
+    "date": "2026-03-01T19:00:00.000Z",
     "description": "Rent",
-    "id": "1oixoh8"
+    "id": "7acx5ba"
+  },
+  {
+    "amount": 36.71,
+    "category": "Other",
+    "date": "2026-03-08T19:00:00.000Z",
+    "description": "Household Items",
+    "id": "xwdewye"
+  },
+  {
+    "amount": 7.61,
+    "category": "Food",
+    "date": "2026-03-08T19:00:00.000Z",
+    "description": "Matcha",
+    "id": "i0wayrj"
   }
 ]

@@ -45,3 +45,11 @@ export const editExpense = async (
   await writeExpensesFile(updatedExpenses);
   revalidatePath('/');
 };
+
+export const deleteExpense = async (id: string): Promise<void> => {
+  const expenses = await readExpensesFile();
+  const filteredExpenses = expenses.filter((expense) => expense.id !== id);
+
+  await writeExpensesFile(filteredExpenses);
+  revalidatePath('/');
+};
