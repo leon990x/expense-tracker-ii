@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# data
+/data/expenses.json
+
 # production
 /build
 
