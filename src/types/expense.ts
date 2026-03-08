@@ -1,18 +1,21 @@
-export enum ExpenseCategory {
-  FOOD = "FOOD",
-  TRANSPORTATION = "TRANSPORTATION",
-  HOUSING = "HOUSING",
-  UTILITIES = "UTILITIES",
-  ENTERTAINMENT = "ENTERTAINMENT",
-  HEALTHCARE = "HEALTHCARE",
-  EDUCATION = "EDUCATION",
-  OTHER = "OTHER",
-}
+export type Category =
+  | "Food"
+  | "Transport"
+  | "Housing"
+  | "Entertainment"
+  | "Utilities"
+  | "Healthcare"
+  | "Other";
 
 export interface Expense {
   id: string;
   amount: number;
-  category: ExpenseCategory;
-  date: string;
+  category: Category;
+  date: string; // ISO String
   description: string;
+}
+
+export interface DailySummary {
+  total: number;
+  categories: Record<Category, number>;
 }
