@@ -5,13 +5,28 @@ import { useRouter } from "next/navigation";
 import ExpenseForm from "@/components/ExpenseForm";
 import SummaryTile from "@/components/SummaryTile";
 import { deleteExpense, editExpense } from "@/lib/actions";
-import { Expense } from "@/types/expense";
+import { BudgetData, BudgetLimits } from "@/types/budget";
+import { Category, Expense } from "@/types/expense";
 
 type TileId = "today" | "week" | "month";
 
 interface ExpenseDashboardProps {
   expenses: Expense[];
+  budget: BudgetData;
 }
+
+type BudgetStatus = "normal" | "warning" | "danger";
+
+const categoryOrder: Category[] = [
+  "Food",
+  "Transport",
+  "Housing",
+  "Entertainment",
+  "Utilities",
+  "Healthcare",
+  "Merchandise",
+  "Other",
+];
 
 const isSameDay = (firstDate: Date, secondDate: Date): boolean => {
   return (
@@ -49,7 +64,38 @@ const getTotal = (items: Expense[]): number => {
   return items.reduce((sum, expense) => sum + expense.amount, 0);
 };
 
-const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
+const getBudgetStatus = (
+  timeframeExpenses: Expense[],
+  limits: BudgetLimits,
+): BudgetStatus => {
+  let hasWarning = false;
+
+  for (const category of categoryOrder) {
+    const spent = timeframeExpenses
+      .filter((expense) => expense.category === category)
+      .reduce((sum, expense) => sum + expense.amount, 0);
+    const limit = limits[category] ?? 0;
+
+    if (limit <= 0) {
+      if (spent > 0) {
+        return "danger";
+      }
+      continue;
+    }
+
+    if (spent > limit) {
+      return "danger";
+    }
+
+    if (spent / limit >= 0.8) {
+      hasWarning = true;
+    }
+  }
+
+  return hasWarning ? "warning" : "normal";
+};
+
+const ExpenseDashboard = ({ expenses, budget }: ExpenseDashboardProps) => {
   const router = useRouter();
   const [expandedTiles, setExpandedTiles] = useState<Set<TileId>>(
     new Set(["today"]),
@@ -95,6 +141,21 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
     () =>
       allExpenses.filter((expense) => isSameMonth(new Date(expense.date), now)),
     [allExpenses, now],
+  );
+
+  const dailyBudgetStatus = useMemo(
+    () => getBudgetStatus(dailyExpenses, budget.daily),
+    [dailyExpenses, budget.daily],
+  );
+
+  const weeklyBudgetStatus = useMemo(
+    () => getBudgetStatus(weeklyExpenses, budget.weekly),
+    [weeklyExpenses, budget.weekly],
+  );
+
+  const monthlyBudgetStatus = useMemo(
+    () => getBudgetStatus(monthlyExpenses, budget.monthly),
+    [monthlyExpenses, budget.monthly],
   );
 
   const handleDeleteExpense = async (expenseId: string) => {
@@ -186,6 +247,7 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
           title="Today"
           amount={getTotal(dailyExpenses)}
           expenses={dailyExpenses}
+          amountStatus={dailyBudgetStatus}
           isExpanded={expandedTiles.has("today")}
           onToggle={(id) => {
             const tileId = id as TileId;
@@ -202,6 +264,7 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
             title="This Week"
             amount={getTotal(weeklyExpenses)}
             expenses={weeklyExpenses}
+            amountStatus={weeklyBudgetStatus}
             isExpanded={expandedTiles.has("week")}
             onToggle={(id) => {
               const tileId = id as TileId;
@@ -217,6 +280,7 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
             title="This Month"
             amount={getTotal(monthlyExpenses)}
             expenses={monthlyExpenses}
+            amountStatus={monthlyBudgetStatus}
             isExpanded={expandedTiles.has("month")}
             onToggle={(id) => {
               const tileId = id as TileId;

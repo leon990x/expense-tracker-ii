@@ -8,6 +8,7 @@ interface SummaryTileProps {
   id: string;
   title: string;
   amount: number;
+  amountStatus: "normal" | "warning" | "danger";
   expenses: Expense[];
   isExpanded: boolean;
   onToggle: (id: string) => void;
@@ -37,6 +38,7 @@ const SummaryTile = ({
   id,
   title,
   amount,
+  amountStatus,
   expenses,
   isExpanded,
   onToggle,
@@ -126,7 +128,15 @@ const SummaryTile = ({
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {title}
           </p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">
+          <p
+            className={`mt-1 text-3xl font-bold ${
+              amountStatus === "danger"
+                ? "text-rose-500"
+                : amountStatus === "warning"
+                  ? "text-orange-500"
+                  : "text-[#0072C1]"
+            }`}
+          >
             ${amount.toFixed(2)}
           </p>
         </div>
@@ -259,6 +269,9 @@ const SummaryTile = ({
                                 </>
                               ) : (
                                 <>
+                                  <span className="min-w-17.5 text-right font-medium text-slate-700">
+                                    ${expense.amount.toFixed(2)}
+                                  </span>
                                   <button
                                     type="button"
                                     onClick={() => {
