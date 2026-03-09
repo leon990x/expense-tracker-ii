@@ -29,6 +29,7 @@ const categoryOrder: Category[] = [
   "Entertainment",
   "Utilities",
   "Healthcare",
+  "Merchandise",
   "Other",
 ];
 
@@ -108,6 +109,7 @@ const SummaryTile = ({
         Entertainment: [],
         Utilities: [],
         Healthcare: [],
+        Merchandise: [],
         Other: [],
       },
     );
@@ -238,14 +240,14 @@ const SummaryTile = ({
                                   />
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                    {                                      
-                                      void saveEditedAmount(expense)
+                                    onClick={() => {
+                                      void saveEditedAmount(expense);
                                       void saveEditedCategory(
-                                        expensesInCategory.map((expense) => expense.id)
-                                      )
-                                    }
-                                    }
+                                        expensesInCategory.map(
+                                          (expense) => expense.id,
+                                        ),
+                                      );
+                                    }}
                                     className="rounded p-1 text-emerald-600 transition hover:bg-emerald-50"
                                     aria-label="Save amount"
                                   >
@@ -264,6 +266,17 @@ const SummaryTile = ({
                                 <>
                                   <button
                                     type="button"
+                                    onClick={() => {
+                                      startEditingCategory(category);
+                                      startEditingAmount(expense);
+                                    }}
+                                    className="rounded p-1 text-sky-600 transition hover:bg-sky-50"
+                                    aria-label="Edit expense amount"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
                                     onClick={() =>
                                       void onDeleteExpense(expense.id)
                                     }
@@ -271,17 +284,6 @@ const SummaryTile = ({
                                     aria-label="Delete expense"
                                   >
                                     <Trash2 size={14} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                        startEditingCategory(category)
-                                        startEditingAmount(expense)}
-                                    }
-                                    className="rounded p-1 text-sky-600 transition hover:bg-sky-50"
-                                    aria-label="Edit expense amount"
-                                  >
-                                    <Pencil size={14} />
                                   </button>
                                 </>
                               )}

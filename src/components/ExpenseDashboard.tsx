@@ -49,7 +49,9 @@ const getTotal = (items: Expense[]): number => {
 };
 
 const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
-  const [expandedTiles, setExpandedTiles] = useState<Set<TileId>>(new Set());
+  const [expandedTiles, setExpandedTiles] = useState<Set<TileId>>(
+    new Set(["today"]),
+  );
   const [showForm, setShowForm] = useState(false);
   const [allExpenses, setAllExpenses] = useState<Expense[]>(expenses);
 
@@ -223,16 +225,8 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
       </section>
 
       <div className="mt-8 flex flex-col items-center">
-        <button
-          type="button"
-          onClick={() => setShowForm((current) => !current)}
-          className="w-full max-w-md rounded-xl bg-sky-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-sky-700"
-        >
-          {showForm ? "Close Expense Form" : "Add Expense"}
-        </button>
-
         <div
-          className={`mt-4 grid w-full max-w-2xl transition-all duration-300 ease-out ${
+          className={`grid w-full max-w-2xl transition-all duration-300 ease-out ${
             showForm
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"
@@ -249,6 +243,14 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
             ) : null}
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowForm((current) => !current)}
+          className="mt-4 w-full max-w-md rounded-xl bg-sky-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-sky-700"
+        >
+          {showForm ? "Close Expense Form" : "Add Expense"}
+        </button>
       </div>
     </>
   );

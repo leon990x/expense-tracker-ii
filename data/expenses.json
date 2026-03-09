@@ -8,7 +8,7 @@
   },
   {
     "amount": 36.71,
-    "category": "Other",
+    "category": "Merchandise",
     "date": "2026-03-08T19:00:00.000Z",
     "description": "Household Items",
     "id": "xwdewye"
@@ -19,5 +19,12 @@
     "date": "2026-03-08T19:00:00.000Z",
     "description": "Matcha",
     "id": "i0wayrj"
+  },
+  {
+    "amount": 35,
+    "category": "Food",
+    "date": "2026-03-05T19:00:00.000Z",
+    "description": "Prepared Meal",
+    "id": "iki3mco"
   }
 ]
