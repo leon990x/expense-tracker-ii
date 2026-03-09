@@ -3,6 +3,8 @@ import { getBudget, getExpenses } from "@/lib/actions";
 import { BudgetCategoryRow } from "@/types/budget";
 import { Category, Expense } from "@/types/expense";
 
+export const dynamic = "force-dynamic";
+
 const categoryOrder: Category[] = [
   "Food",
   "Transport",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ExpenseForm from "@/components/ExpenseForm";
 import SummaryTile from "@/components/SummaryTile";
 import { deleteExpense, editExpense } from "@/lib/actions";
@@ -49,6 +50,7 @@ const getTotal = (items: Expense[]): number => {
 };
 
 const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
+  const router = useRouter();
   const [expandedTiles, setExpandedTiles] = useState<Set<TileId>>(
     new Set(["today"]),
   );
@@ -103,6 +105,7 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
 
     try {
       await deleteExpense(expenseId);
+      router.refresh();
     } catch {
       setAllExpenses(previousExpenses);
     }
@@ -131,6 +134,7 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
         date: expense.date,
         description: updatedExpense.description,
       });
+      router.refresh();
     } catch {
       setAllExpenses(previousExpenses);
     }
@@ -168,6 +172,7 @@ const ExpenseDashboard = ({ expenses }: ExpenseDashboardProps) => {
             }),
           ),
       );
+      router.refresh();
     } catch {
       setAllExpenses(previousExpenses);
     }

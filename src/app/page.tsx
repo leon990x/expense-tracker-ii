@@ -1,6 +1,8 @@
 import ExpenseDashboard from "@/components/ExpenseDashboard";
 import { getExpenses } from "@/lib/actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const expenses = await getExpenses();
 

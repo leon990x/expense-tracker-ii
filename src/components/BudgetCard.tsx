@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { updateBudgetLimit } from "@/lib/actions";
 import { BudgetCategoryRow, BudgetTimeframe } from "@/types/budget";
@@ -23,6 +24,7 @@ const BudgetCard = ({
   isExpanded,
   onToggle,
 }: BudgetCardProps) => {
+  const router = useRouter();
   const [localRows, setLocalRows] = useState<BudgetCategoryRow[]>(rows);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [draftLimit, setDraftLimit] = useState<string>("");
@@ -53,6 +55,7 @@ const BudgetCard = ({
 
     try {
       await updateBudgetLimit(timeframe, row.category, parsedLimit);
+      router.refresh();
       cancelEdit();
     } catch {
       setLocalRows(previousRows);

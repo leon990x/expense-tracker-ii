@@ -19,6 +19,9 @@
 
 # data
 /data/expenses.json
+/data/expense-tracker.sqlite
+/data/expense-tracker.sqlite-shm
+/data/expense-tracker.sqlite-wal
 
 # production
 /build
