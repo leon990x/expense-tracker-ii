@@ -31,6 +31,9 @@ const categoryOrder: Category[] = [
   "Utilities",
   "Healthcare",
   "Merchandise",
+  "Investments",
+  "Subscriptions",
+  "Coffee",
   "Other",
 ];
 
@@ -96,6 +99,19 @@ const SummaryTile = ({
     setEditingCategory(null);
   };
 
+  const formatExpenseDate = (value: string): string => {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "--/--";
+    }
+
+    return date.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
   const groupedExpenses = useMemo(() => {
     return categoryOrder.reduce<Record<Category, Expense[]>>(
       (accumulator, category) => {
@@ -112,6 +128,9 @@ const SummaryTile = ({
         Utilities: [],
         Healthcare: [],
         Merchandise: [],
+        Investments: [],
+        Subscriptions: [],
+        Coffee: [],
         Other: [],
       },
     );
@@ -220,12 +239,17 @@ const SummaryTile = ({
                       {expensesInCategory.map((expense) => (
                         <li
                           key={expense.id}
-                          className="rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5 text-xs text-slate-600"
+                          className="rounded-md border border-slate-100 bg-slate-50/80 px-2 py-2 text-xs text-slate-600"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="truncate">
-                              {expense.description || "No description"}
-                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-slate-700">
+                                {expense.description || "No description"}
+                              </p>
+                              <p className="mt-0.5 text-xs text-slate-500">
+                                {formatExpenseDate(expense.date)}
+                              </p>
+                            </div>
 
                             <div className="flex items-center gap-1">
                               {editingExpenseId === expense.id ? (
@@ -269,7 +293,7 @@ const SummaryTile = ({
                                 </>
                               ) : (
                                 <>
-                                  <span className="min-w-17.5 text-right font-medium text-slate-700">
+                                  <span className="min-w-20 text-right text-sm font-semibold text-slate-700">
                                     ${expense.amount.toFixed(2)}
                                   </span>
                                   <button
@@ -277,20 +301,20 @@ const SummaryTile = ({
                                     onClick={() => {
                                       startEditingAmount(expense);
                                     }}
-                                    className="rounded p-1 text-sky-600 transition hover:bg-sky-50"
+                                    className="rounded p-1.5 text-sky-600 transition hover:bg-sky-50"
                                     aria-label="Edit expense amount"
                                   >
-                                    <Pencil size={14} />
+                                    <Pencil size={16} />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() =>
                                       void onDeleteExpense(expense.id)
                                     }
-                                    className="rounded p-1 text-rose-500 transition hover:bg-rose-50"
+                                    className="rounded p-1.5 text-rose-500 transition hover:bg-rose-50"
                                     aria-label="Delete expense"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                   </button>
                                 </>
                               )}

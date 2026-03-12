@@ -14,6 +14,9 @@ const allCategories: Category[] = [
   "Utilities",
   "Healthcare",
   "Merchandise",
+  "Investments",
+  "Subscriptions",
+  "Coffee",
   "Other",
 ];
 

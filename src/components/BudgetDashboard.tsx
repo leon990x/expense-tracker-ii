@@ -39,7 +39,7 @@ const BudgetDashboard = ({
     <section className="flex flex-col gap-5">
       <BudgetCard
         id="today"
-        title="Today"
+        title="Daily"
         timeframe="daily"
         rows={dailyRows}
         isExpanded={expandedTiles.has("today")}
@@ -47,7 +47,7 @@ const BudgetDashboard = ({
       />
       <BudgetCard
         id="week"
-        title="This Week"
+        title="Weekly"
         timeframe="weekly"
         rows={weeklyRows}
         isExpanded={expandedTiles.has("week")}
@@ -55,7 +55,7 @@ const BudgetDashboard = ({
       />
       <BudgetCard
         id="month"
-        title="This Month"
+        title="Monthly"
         timeframe="monthly"
         rows={monthlyRows}
         isExpanded={expandedTiles.has("month")}

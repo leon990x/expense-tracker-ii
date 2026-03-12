@@ -6,6 +6,9 @@ export type Category =
   | "Utilities"
   | "Healthcare"
   | "Merchandise"
+  | "Investments"
+  | "Subscriptions"
+  | "Coffee"
   | "Other";
 
 export interface Expense {
