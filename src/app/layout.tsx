@@ -31,7 +31,9 @@ export default function RootLayout({
         <div className="mx-auto min-h-screen w-full max-w-6xl px-4 py-8 sm:px-8">
           <header className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5 sm:px-6">
             <h1 className="text-center text-3xl font-bold tracking-tight text-slate-900">
-              DollarVis
+              Dollar
+              <span className="font-extrabold italic text-emerald-900">V</span>
+              is
             </h1>
             <AppNavigation />
           </header>

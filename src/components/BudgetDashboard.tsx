@@ -18,7 +18,7 @@ const BudgetDashboard = ({
   monthlyRows,
 }: BudgetDashboardProps) => {
   const [expandedTiles, setExpandedTiles] = useState<Set<BudgetTileId>>(
-    new Set(["today"]),
+    new Set(["month"]),
   );
 
   const toggleTile = (tileId: BudgetTileId) => {

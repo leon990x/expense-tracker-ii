@@ -73,6 +73,7 @@ const SummaryTile = ({
   };
 
   const startEditingAmount = (expense: Expense) => {
+    setEditingCategory(null);
     setEditingExpenseId(expense.id);
     setDraftAmount(expense.amount.toFixed(2));
     setDraftDescription(expense.description);
@@ -106,6 +107,10 @@ const SummaryTile = ({
   };
 
   const startEditingCategory = (category: Category) => {
+    if (editingExpenseId !== null) {
+      return;
+    }
+
     setEditingCategory(category);
     setDraftCategory(category);
   };
@@ -208,11 +213,7 @@ const SummaryTile = ({
                     (sum, expense) => sum + expense.amount,
                     0,
                   );
-                  const showCategoryEditTrigger =
-                    editingExpenseId !== null &&
-                    expensesInCategory.some(
-                      (expense) => expense.id === editingExpenseId,
-                    );
+                  const showCategoryEditTrigger = editingExpenseId === null;
 
                   if (expensesInCategory.length === 0) {
                     return null;
