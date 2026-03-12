@@ -128,21 +128,30 @@ const ExpenseDashboard = ({ expenses, budget }: ExpenseDashboardProps) => {
 
   const dailyExpenses = useMemo(
     () =>
-      allExpenses.filter((expense) => isSameDay(new Date(expense.date), now)),
+      allExpenses.filter((expense) => {
+        const expenseDate = new Date(expense.date);
+        return isSameDay(expenseDate, now);
+      }),
     [allExpenses, now],
   );
 
   const weeklyExpenses = useMemo(
     () =>
-      allExpenses.filter((expense) =>
-        isDateInRange(new Date(expense.date), weekStart, weekEnd),
-      ),
+      allExpenses.filter((expense) => {
+        const expenseDate = new Date(expense.date);
+
+        return isDateInRange(expenseDate, weekStart, weekEnd);
+      }),
     [allExpenses, weekStart, weekEnd],
   );
 
   const monthlyExpenses = useMemo(
     () =>
-      allExpenses.filter((expense) => isSameMonth(new Date(expense.date), now)),
+      allExpenses.filter((expense) => {
+        const expenseDate = new Date(expense.date);
+
+        return isSameMonth(expenseDate, now);
+      }),
     [allExpenses, now],
   );
 
@@ -177,7 +186,9 @@ const ExpenseDashboard = ({ expenses, budget }: ExpenseDashboardProps) => {
 
   const handleEditExpense = async (
     expense: Expense,
-    updates: Partial<Pick<Expense, "amount" | "description" | "category">>,
+    updates: Partial<
+      Pick<Expense, "amount" | "description" | "category" | "date">
+    >,
   ) => {
     const previousExpenses = allExpenses;
     const updatedExpense: Expense = {
@@ -185,6 +196,7 @@ const ExpenseDashboard = ({ expenses, budget }: ExpenseDashboardProps) => {
       amount: updates.amount ?? expense.amount,
       description: updates.description ?? expense.description,
       category: updates.category ?? expense.category,
+      date: updates.date ?? expense.date,
     };
 
     setAllExpenses((current) =>
@@ -195,7 +207,7 @@ const ExpenseDashboard = ({ expenses, budget }: ExpenseDashboardProps) => {
       await editExpense(expense.id, {
         amount: updatedExpense.amount,
         category: updatedExpense.category,
-        date: expense.date,
+        date: updatedExpense.date,
         description: updatedExpense.description,
       });
       router.refresh();

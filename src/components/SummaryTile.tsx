@@ -15,7 +15,9 @@ interface SummaryTileProps {
   onDeleteExpense: (expenseId: string) => Promise<void>;
   onEditExpense: (
     expense: Expense,
-    updates: Partial<Pick<Expense, "amount" | "description" | "category">>,
+    updates: Partial<
+      Pick<Expense, "amount" | "description" | "category" | "date">
+    >,
   ) => Promise<void>;
   onBulkEditCategory: (
     expenseIds: string[],
@@ -52,19 +54,36 @@ const SummaryTile = ({
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [draftAmount, setDraftAmount] = useState<string>("");
   const [draftDescription, setDraftDescription] = useState<string>("");
+  const [draftDate, setDraftDate] = useState<string>("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [draftCategory, setDraftCategory] = useState<Category>("Food");
+
+  const toDateInputValue = (value: string): string => {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
 
   const startEditingAmount = (expense: Expense) => {
     setEditingExpenseId(expense.id);
     setDraftAmount(expense.amount.toFixed(2));
     setDraftDescription(expense.description);
+    setDraftDate(toDateInputValue(expense.date));
   };
 
   const cancelEditingAmount = () => {
     setEditingExpenseId(null);
     setDraftAmount("");
     setDraftDescription("");
+    setDraftDate("");
   };
 
   const saveEditedAmount = async (expense: Expense) => {
@@ -74,9 +93,14 @@ const SummaryTile = ({
       return;
     }
 
+    const nextDate = draftDate
+      ? new Date(`${draftDate}T12:00:00`).toISOString()
+      : expense.date;
+
     await onEditExpense(expense, {
       amount: parsedAmount,
       description: draftDescription.trim(),
+      date: nextDate,
     });
     cancelEditingAmount();
   };
@@ -239,29 +263,43 @@ const SummaryTile = ({
                       {expensesInCategory.map((expense) => (
                         <li
                           key={expense.id}
-                          className="rounded-md border border-slate-100 bg-slate-50/80 px-2 py-2 text-xs text-slate-600"
+                          className="min-h-16 rounded-md border border-slate-100 bg-slate-50/80 px-2.5 py-2 text-xs text-slate-600"
                         >
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="truncate text-sm text-slate-700">
-                                {expense.description || "No description"}
-                              </p>
-                              <p className="mt-0.5 text-xs text-slate-500">
-                                {formatExpenseDate(expense.date)}
-                              </p>
+                              {editingExpenseId === expense.id ? (
+                                <input
+                                  type="text"
+                                  value={draftDescription}
+                                  onChange={(event) =>
+                                    setDraftDescription(event.target.value)
+                                  }
+                                  className="h-5 w-full rounded border border-sky-600 bg-white px-1 text-sm text-slate-700 outline-none focus:ring-0"
+                                />
+                              ) : (
+                                <p className="truncate text-sm text-slate-700">
+                                  {expense.description || "No description"}
+                                </p>
+                              )}
+                              {editingExpenseId === expense.id ? (
+                                <input
+                                  type="date"
+                                  value={draftDate}
+                                  onChange={(event) =>
+                                    setDraftDate(event.target.value)
+                                  }
+                                  className="mt-0.5 h-5 w-full rounded border border-sky-600 bg-white px-1 text-xs text-slate-700 outline-none focus:ring-0"
+                                />
+                              ) : (
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                  {formatExpenseDate(expense.date)}
+                                </p>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-1">
                               {editingExpenseId === expense.id ? (
                                 <>
-                                  <input
-                                    type="text"
-                                    value={draftDescription}
-                                    onChange={(event) =>
-                                      setDraftDescription(event.target.value)
-                                    }
-                                    className="w-32 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
-                                  />
                                   <input
                                     type="number"
                                     min="0.01"
@@ -270,7 +308,7 @@ const SummaryTile = ({
                                     onChange={(event) =>
                                       setDraftAmount(event.target.value)
                                     }
-                                    className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-right text-xs"
+                                    className="h-5 w-20 rounded border border-sky-600 bg-white px-1 text-right text-sm text-slate-700 outline-none focus:ring-0"
                                   />
                                   <button
                                     type="button"
