@@ -196,176 +196,182 @@ const SummaryTile = ({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="mb-3 text-sm font-semibold text-slate-700">
-              Category breakdown
-            </p>
-            <div className="space-y-3">
-              {categoryOrder.map((category) => {
-                const expensesInCategory = groupedExpenses[category];
-                const categoryTotal = expensesInCategory.reduce(
-                  (sum, expense) => sum + expense.amount,
-                  0,
-                );
-                const showCategoryEditTrigger =
-                  editingExpenseId !== null &&
-                  expensesInCategory.some(
-                    (expense) => expense.id === editingExpenseId,
+          {expenses.length > 0 ? (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <p className="mb-3 text-sm font-semibold text-slate-700">
+                Category breakdown
+              </p>
+              <div className="space-y-3">
+                {categoryOrder.map((category) => {
+                  const expensesInCategory = groupedExpenses[category];
+                  const categoryTotal = expensesInCategory.reduce(
+                    (sum, expense) => sum + expense.amount,
+                    0,
                   );
+                  const showCategoryEditTrigger =
+                    editingExpenseId !== null &&
+                    expensesInCategory.some(
+                      (expense) => expense.id === editingExpenseId,
+                    );
 
-                if (expensesInCategory.length === 0) {
-                  return null;
-                }
+                  if (expensesInCategory.length === 0) {
+                    return null;
+                  }
 
-                return (
-                  <div key={category} className="rounded-md bg-white p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      {editingCategory === category ? (
-                        <div className="flex items-center gap-1">
-                          <select
-                            value={draftCategory}
-                            onChange={(event) =>
-                              setDraftCategory(event.target.value as Category)
-                            }
-                            className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
-                          >
-                            {categoryOrder.map((categoryOption) => (
-                              <option
-                                key={categoryOption}
-                                value={categoryOption}
-                              >
-                                {categoryOption}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-sm font-medium text-slate-800">
-                          <span>{category}</span>
-                          {showCategoryEditTrigger ? (
-                            <button
-                              type="button"
-                              onClick={() => startEditingCategory(category)}
-                              className="rounded p-0.5 text-slate-500 transition hover:bg-slate-100 hover:text-sky-700"
-                              aria-label="Edit category"
+                  return (
+                    <div key={category} className="rounded-md bg-white p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        {editingCategory === category ? (
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={draftCategory}
+                              onChange={(event) =>
+                                setDraftCategory(event.target.value as Category)
+                              }
+                              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
                             >
-                              <ChevronDown size={12} />
-                            </button>
-                          ) : null}
-                        </div>
-                      )}
-                      <p className="text-sm font-semibold text-slate-700">
-                        ${categoryTotal.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <ul className="space-y-1">
-                      {expensesInCategory.map((expense) => (
-                        <li
-                          key={expense.id}
-                          className="min-h-16 rounded-md border border-slate-100 bg-slate-50/80 px-2.5 py-2 text-xs text-slate-600"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              {editingExpenseId === expense.id ? (
-                                <input
-                                  type="text"
-                                  value={draftDescription}
-                                  onChange={(event) =>
-                                    setDraftDescription(event.target.value)
-                                  }
-                                  className="h-5 w-full rounded border border-sky-600 bg-white px-1 text-sm text-slate-700 outline-none focus:ring-0"
-                                />
-                              ) : (
-                                <p className="truncate text-sm text-slate-700">
-                                  {expense.description || "No description"}
-                                </p>
-                              )}
-                              {editingExpenseId === expense.id ? (
-                                <input
-                                  type="date"
-                                  value={draftDate}
-                                  onChange={(event) =>
-                                    setDraftDate(event.target.value)
-                                  }
-                                  className="mt-0.5 h-5 w-full rounded border border-sky-600 bg-white px-1 text-xs text-slate-700 outline-none focus:ring-0"
-                                />
-                              ) : (
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                  {formatExpenseDate(expense.date)}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              {editingExpenseId === expense.id ? (
-                                <>
-                                  <input
-                                    type="number"
-                                    min="0.01"
-                                    step="0.01"
-                                    value={draftAmount}
-                                    onChange={(event) =>
-                                      setDraftAmount(event.target.value)
-                                    }
-                                    className="h-5 w-20 rounded border border-sky-600 bg-white px-1 text-right text-sm text-slate-700 outline-none focus:ring-0"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      void saveEditedAmount(expense);
-                                    }}
-                                    className="rounded p-1 text-emerald-600 transition hover:bg-emerald-50"
-                                    aria-label="Save amount"
-                                  >
-                                    <Check size={14} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={cancelEditingAmount}
-                                    className="rounded p-1 text-slate-500 transition hover:bg-slate-200"
-                                    aria-label="Cancel edit"
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="min-w-20 text-right text-sm font-semibold text-slate-700">
-                                    ${expense.amount.toFixed(2)}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      startEditingAmount(expense);
-                                    }}
-                                    className="rounded p-1.5 text-sky-600 transition hover:bg-sky-50"
-                                    aria-label="Edit expense amount"
-                                  >
-                                    <Pencil size={16} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      void onDeleteExpense(expense.id)
-                                    }
-                                    className="rounded p-1.5 text-rose-500 transition hover:bg-rose-50"
-                                    aria-label="Delete expense"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
-                              )}
-                            </div>
+                              {categoryOrder.map((categoryOption) => (
+                                <option
+                                  key={categoryOption}
+                                  value={categoryOption}
+                                >
+                                  {categoryOption}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
+                        ) : (
+                          <div className="flex items-center gap-1 text-sm font-medium text-slate-800">
+                            <span>{category}</span>
+                            {showCategoryEditTrigger ? (
+                              <button
+                                type="button"
+                                onClick={() => startEditingCategory(category)}
+                                className="rounded p-0.5 text-slate-500 transition hover:bg-slate-100 hover:text-sky-700"
+                                aria-label="Edit category"
+                              >
+                                <ChevronDown size={12} />
+                              </button>
+                            ) : null}
+                          </div>
+                        )}
+                        <p className="text-sm font-semibold text-slate-700">
+                          ${categoryTotal.toFixed(2)}
+                        </p>
+                      </div>
+
+                      <ul className="space-y-1">
+                        {expensesInCategory.map((expense) => (
+                          <li
+                            key={expense.id}
+                            className="min-h-16 rounded-md border border-slate-100 bg-slate-50/80 px-2.5 py-2 text-xs text-slate-600"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                {editingExpenseId === expense.id ? (
+                                  <input
+                                    type="text"
+                                    value={draftDescription}
+                                    onChange={(event) =>
+                                      setDraftDescription(event.target.value)
+                                    }
+                                    className="h-5 w-full rounded border border-sky-600 bg-white px-1 text-sm text-slate-700 outline-none focus:ring-0"
+                                  />
+                                ) : (
+                                  <p className="truncate text-sm text-slate-700">
+                                    {expense.description || "No description"}
+                                  </p>
+                                )}
+                                {editingExpenseId === expense.id ? (
+                                  <input
+                                    type="date"
+                                    value={draftDate}
+                                    onChange={(event) =>
+                                      setDraftDate(event.target.value)
+                                    }
+                                    className="mt-0.5 h-5 w-full rounded border border-sky-600 bg-white px-1 text-xs text-slate-700 outline-none focus:ring-0"
+                                  />
+                                ) : (
+                                  <p className="mt-0.5 text-xs text-slate-500">
+                                    {formatExpenseDate(expense.date)}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                {editingExpenseId === expense.id ? (
+                                  <>
+                                    <input
+                                      type="number"
+                                      min="0.01"
+                                      step="0.01"
+                                      value={draftAmount}
+                                      onChange={(event) =>
+                                        setDraftAmount(event.target.value)
+                                      }
+                                      className="h-5 w-20 rounded border border-sky-600 bg-white px-1 text-right text-sm text-slate-700 outline-none focus:ring-0"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        void saveEditedAmount(expense);
+                                      }}
+                                      className="rounded p-1 text-emerald-600 transition hover:bg-emerald-50"
+                                      aria-label="Save amount"
+                                    >
+                                      <Check size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={cancelEditingAmount}
+                                      className="rounded p-1 text-slate-500 transition hover:bg-slate-200"
+                                      aria-label="Cancel edit"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="min-w-20 text-right text-sm font-semibold text-slate-700">
+                                      ${expense.amount.toFixed(2)}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        startEditingAmount(expense);
+                                      }}
+                                      className="rounded p-1.5 text-sky-600 transition hover:bg-sky-50"
+                                      aria-label="Edit expense amount"
+                                    >
+                                      <Pencil size={16} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        void onDeleteExpense(expense.id)
+                                      }
+                                      className="rounded p-1.5 text-rose-500 transition hover:bg-rose-50"
+                                      aria-label="Delete expense"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">No expenses today.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

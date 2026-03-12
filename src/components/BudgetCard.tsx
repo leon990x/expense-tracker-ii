@@ -7,6 +7,8 @@ import { updateBudgetLimit } from "@/lib/actions";
 import { BudgetCategoryRow, BudgetTimeframe } from "@/types/budget";
 import { Category } from "@/types/expense";
 
+const UNLIMITED_LIMIT = -1;
+
 interface BudgetCardProps {
   id: "today" | "week" | "month";
   title: string;
@@ -31,7 +33,7 @@ const BudgetCard = ({
 
   const startEdit = (row: BudgetCategoryRow) => {
     setEditingCategory(row.category);
-    setDraftLimit(row.limit.toFixed(2));
+    setDraftLimit(row.limit >= 0 ? row.limit.toFixed(2) : "");
   };
 
   const cancelEdit = () => {
@@ -55,6 +57,26 @@ const BudgetCard = ({
 
     try {
       await updateBudgetLimit(timeframe, row.category, parsedLimit);
+      router.refresh();
+      cancelEdit();
+    } catch {
+      setLocalRows(previousRows);
+    }
+  };
+
+  const setNoLimit = async (row: BudgetCategoryRow) => {
+    const previousRows = localRows;
+
+    setLocalRows((current) =>
+      current.map((item) =>
+        item.category === row.category
+          ? { ...item, limit: UNLIMITED_LIMIT }
+          : item,
+      ),
+    );
+
+    try {
+      await updateBudgetLimit(timeframe, row.category, UNLIMITED_LIMIT);
       router.refresh();
       cancelEdit();
     } catch {
@@ -92,12 +114,22 @@ const BudgetCard = ({
 
             <ul className="space-y-3">
               {localRows.map((row) => {
-                const ratio =
-                  row.limit > 0 ? row.spent / row.limit : row.spent > 0 ? 1 : 0;
+                const hasNoLimit = row.limit < 0;
+                const ratio = hasNoLimit
+                  ? 0
+                  : row.limit > 0
+                    ? row.spent / row.limit
+                    : row.spent > 0
+                      ? 1
+                      : 0;
                 const progressPercent = Math.min(100, Math.max(0, ratio * 100));
-                const isOverBudget =
-                  row.limit > 0 ? row.spent > row.limit : row.spent > 0;
-                const isNearLimit = !isOverBudget && ratio >= 0.8;
+                const isOverBudget = hasNoLimit
+                  ? false
+                  : row.limit > 0
+                    ? row.spent > row.limit
+                    : row.spent > 0;
+                const isNearLimit =
+                  !hasNoLimit && !isOverBudget && ratio >= 0.8;
                 const progressBarClassName = isOverBudget
                   ? "bg-rose-500"
                   : isNearLimit
@@ -134,6 +166,13 @@ const BudgetCard = ({
                             />
                             <button
                               type="button"
+                              onClick={() => void setNoLimit(row)}
+                              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 transition hover:bg-slate-100"
+                            >
+                              No Limit
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => void saveLimit(row)}
                               className="rounded bg-[#0072C1] px-2 py-1 text-xs font-semibold text-white transition hover:opacity-90"
                             >
@@ -149,8 +188,16 @@ const BudgetCard = ({
                           </>
                         ) : (
                           <>
-                            <span className="text-xs font-semibold text-slate-700">
-                              Limit: ${row.limit.toFixed(2)}
+                            <span
+                              className={`text-xs font-semibold ${
+                                row.limit < 0
+                                  ? "text-rose-500"
+                                  : "text-slate-700"
+                              }`}
+                            >
+                              {row.limit < 0
+                                ? "No Limit"
+                                : `Limit: $${row.limit.toFixed(2)}`}
                             </span>
                             <button
                               type="button"

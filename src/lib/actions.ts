@@ -99,7 +99,8 @@ export const updateBudgetLimit = async (
   limit: number,
 ): Promise<void> => {
   const db = await getDb();
-  const sanitizedLimit = Number.isFinite(limit) && limit >= 0 ? limit : 0;
+  const sanitizedLimit =
+    limit === -1 ? -1 : Number.isFinite(limit) && limit >= 0 ? limit : 0;
 
   await db.run(
     `INSERT INTO budget_limits (timeframe, category, limit_amount)

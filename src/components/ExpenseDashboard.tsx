@@ -79,6 +79,10 @@ const getBudgetStatus = (
       .reduce((sum, expense) => sum + expense.amount, 0);
     const limit = limits[category] ?? 0;
 
+    if (limit < 0) {
+      continue;
+    }
+
     if (limit <= 0) {
       if (spent > 0) {
         return "danger";
