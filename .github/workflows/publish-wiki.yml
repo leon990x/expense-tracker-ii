@@ -14,5 +14,28 @@ jobs:
   publish-wiki:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: Andrew-Chen-Wang/github-wiki-action@v4
+      - uses: actions/checkout@v4
+
+      - name: Publish docs to wiki
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.wiki.git" wiki
+
+          rsync -av --delete docs/ wiki/
+
+          cd wiki
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No wiki changes to publish"
+            exit 0
+          fi
+
+          git commit -m "Sync docs from ${GITHUB_SHA}"
+          git push origin master
