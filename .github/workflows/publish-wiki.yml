@@ -19,14 +19,13 @@ jobs:
       - name: Publish docs to wiki
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.wiki.git" wiki
+          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/leon990x/expense-tracker-ii.wiki.git" wiki
 
           rsync -av --delete docs/ wiki/
 
