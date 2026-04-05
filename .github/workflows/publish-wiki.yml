@@ -30,12 +30,12 @@ jobs:
 
           rsync -av --delete --exclude='.git/' docs/ "$WIKI_DIR/"
 
-          if [ -f "$WIKI_DIR/README.md" ]; then
-            cp "$WIKI_DIR/README.md" "$WIKI_DIR/Home.md"
-          fi
+          to_title() {
+            basename "$1" | sed -E 's/([a-z0-9])([A-Z])/\1 \2/g'
+          }
 
           {
-            echo "# Sections"
+            echo "# Documentation"
             for section in Dashboards Components App Data Types; do
               if [ -d "$WIKI_DIR/$section" ]; then
                 echo
@@ -43,8 +43,25 @@ jobs:
                 find "$WIKI_DIR/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
                   rel_path="${file#$WIKI_DIR/}"
                   wiki_page="${rel_path%.md}"
-                  title="$(basename "${rel_path%.md}")"
-                  echo "- [[${title}|${wiki_page}]]"
+                  title="$(to_title "${rel_path%.md}")"
+                  echo "- [${title}](${wiki_page})"
+                done
+              fi
+            done
+          } > "$WIKI_DIR/Home.md"
+
+          {
+            echo "# Sections"
+            echo "- [Home](Home)"
+            for section in Dashboards Components App Data Types; do
+              if [ -d "$WIKI_DIR/$section" ]; then
+                echo
+                echo "## $section"
+                find "$WIKI_DIR/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
+                  rel_path="${file#$WIKI_DIR/}"
+                  wiki_page="${rel_path%.md}"
+                  title="$(to_title "${rel_path%.md}")"
+                  echo "- [${title}](${wiki_page})"
                 done
               fi
             done
