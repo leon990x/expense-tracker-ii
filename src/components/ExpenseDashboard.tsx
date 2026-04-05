@@ -102,7 +102,7 @@ const getBudgetStatus = (
   return hasWarning ? "warning" : "normal";
 };
 
-// Expense Dashboard
+// Expense Dashboard v1
 const ExpenseDashboard = ({ expenses, budget }: ExpenseDashboardProps) => {
   const router = useRouter();
   const [expandedTiles, setExpandedTiles] = useState<Set<TileId>>(
