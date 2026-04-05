@@ -1,0 +1,63 @@
+name: Update version
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute and persist version
+        run: |
+          set -euo pipefail
+
+          DATE_UTC="$(date -u +%Y.%m.%d)"
+          DAY_START="$(date -u +%Y-%m-%d)T00:00:00Z"
+          DAY_END="$(date -u +%Y-%m-%d)T23:59:59Z"
+
+          COMMIT_SUBJECTS="$(git log --since="$DAY_START" --until="$DAY_END" --pretty=%s)"
+
+          FEAT_COUNT=0
+          FIX_COUNT=0
+
+          while IFS= read -r subject; do
+            if [ -z "$subject" ]; then
+              continue
+            fi
+
+            if printf '%s' "$subject" | grep -Eiq '^feat:'; then
+              FEAT_COUNT=$((FEAT_COUNT + 1))
+            else
+              FIX_COUNT=$((FIX_COUNT + 1))
+            fi
+          done <<EOF
+$COMMIT_SUBJECTS
+EOF
+
+          VERSION_VALUE="${DATE_UTC}.${FEAT_COUNT}.${FIX_COUNT}"
+          echo "$VERSION_VALUE" > VERSION
+          echo "Computed version: $VERSION_VALUE"
+
+      - name: Commit version file
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- VERSION; then
+            echo "VERSION unchanged"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "chore: update version"
+          git push
