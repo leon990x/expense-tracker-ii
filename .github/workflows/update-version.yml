@@ -39,9 +39,7 @@ jobs:
             else
               FIX_COUNT=$((FIX_COUNT + 1))
             fi
-          done <<EOF
-$COMMIT_SUBJECTS
-EOF
+          done < <(printf '%s\n' "$COMMIT_SUBJECTS")
 
           VERSION_VALUE="${DATE_UTC}.${FEAT_COUNT}.${FIX_COUNT}"
           echo "$VERSION_VALUE" > VERSION
