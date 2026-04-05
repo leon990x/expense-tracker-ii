@@ -28,9 +28,10 @@ jobs:
           WIKI_DIR="$(mktemp -d)"
           git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/leon990x/expense-tracker-ii.wiki.git" "$WIKI_DIR"
 
-          rsync -av --delete docs/ "$WIKI_DIR/"
+          rsync -av --delete --exclude='.git/' docs/ "$WIKI_DIR/"
 
           cd "$WIKI_DIR"
+          git rev-parse --is-inside-work-tree
           git add -A
           if git diff --cached --quiet; then
             echo "No wiki changes to publish"
