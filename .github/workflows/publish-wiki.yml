@@ -25,11 +25,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/leon990x/expense-tracker-ii.wiki.git" wiki
+          WIKI_DIR="$(mktemp -d)"
+          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/leon990x/expense-tracker-ii.wiki.git" "$WIKI_DIR"
 
-          rsync -av --delete docs/ wiki/
+          rsync -av --delete docs/ "$WIKI_DIR/"
 
-          cd wiki
+          cd "$WIKI_DIR"
           git add -A
           if git diff --cached --quiet; then
             echo "No wiki changes to publish"
