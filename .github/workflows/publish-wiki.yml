@@ -28,23 +28,37 @@ jobs:
           WIKI_DIR="$(mktemp -d)"
           git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/leon990x/expense-tracker-ii.wiki.git" "$WIKI_DIR"
 
-          rsync -av --delete --exclude='.git/' docs/ "$WIKI_DIR/"
+          find "$WIKI_DIR" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
           to_title() {
             basename "$1" | sed -E 's/([a-z0-9])([A-Z])/\1 \2/g'
           }
 
+          to_page() {
+            echo "$1" | sed -E 's/\.md$//; s#/#-#g'
+          }
+
+          for section in Dashboards Components App Data Types; do
+            if [ -d "docs/$section" ]; then
+              find "docs/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
+                rel_path="${file#docs/}"
+                page="$(to_page "$rel_path")"
+                cp "$file" "$WIKI_DIR/${page}.md"
+              done
+            fi
+          done
+
           {
             echo "# Documentation"
             for section in Dashboards Components App Data Types; do
-              if [ -d "$WIKI_DIR/$section" ]; then
+              if [ -d "docs/$section" ]; then
                 echo
                 echo "## $section"
-                find "$WIKI_DIR/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
-                  rel_path="${file#$WIKI_DIR/}"
-                  wiki_page="${rel_path%.md}"
+                find "docs/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
+                  rel_path="${file#docs/}"
+                  page="$(to_page "$rel_path")"
                   title="$(to_title "${rel_path%.md}")"
-                  echo "- [${title}](${wiki_page})"
+                  echo "- [${title}](${page})"
                 done
               fi
             done
@@ -54,14 +68,14 @@ jobs:
             echo "# Sections"
             echo "- [Home](Home)"
             for section in Dashboards Components App Data Types; do
-              if [ -d "$WIKI_DIR/$section" ]; then
+              if [ -d "docs/$section" ]; then
                 echo
                 echo "## $section"
-                find "$WIKI_DIR/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
-                  rel_path="${file#$WIKI_DIR/}"
-                  wiki_page="${rel_path%.md}"
+                find "docs/$section" -maxdepth 1 -type f -name "*.md" | sort | while read -r file; do
+                  rel_path="${file#docs/}"
+                  page="$(to_page "$rel_path")"
                   title="$(to_title "${rel_path%.md}")"
-                  echo "- [${title}](${wiki_page})"
+                  echo "- [${title}](${page})"
                 done
               fi
             done
