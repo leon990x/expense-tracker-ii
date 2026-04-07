@@ -12,7 +12,10 @@ jobs:
     permissions:
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
+
       - name: Summon Copilot to current PR
+        if: github.event_name == 'pull_request'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --body "@copilot please run the 'wiki-sync' skill on this branch."
