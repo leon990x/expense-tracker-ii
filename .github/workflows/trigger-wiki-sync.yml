@@ -1,6 +1,6 @@
 name: Trigger Copilot Wiki Sync
 on:
-  push:
+  push: # remove for prod
     branches: [main]
   pull_request:
     types: [opened, synchronize]
