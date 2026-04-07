@@ -3,7 +3,7 @@ on:
   push: # remove for prod
     branches: [main]
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, closed]
     paths: ["**.docs.md"] # Only pings if docs are touched
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Summon Copilot to current PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && (github.event.action != 'closed' || github.event.pull_request.merged == true)
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --body "@copilot please run the 'wiki-sync' skill on this branch."
