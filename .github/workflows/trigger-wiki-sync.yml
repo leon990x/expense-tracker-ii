@@ -1,8 +1,10 @@
 name: Trigger Copilot Wiki Sync
 on:
+  push:
+    branches: [main]
   pull_request:
     types: [opened, synchronize]
-    paths: [ '**.docs.md' ] # Only pings if docs are touched
+    paths: ["**.docs.md"] # Only pings if docs are touched
 
 jobs:
   ping-copilot:
