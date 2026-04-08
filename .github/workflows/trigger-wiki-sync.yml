@@ -21,4 +21,4 @@ jobs:
           gh pr comment ${{ github.event.pull_request.number }} \
             --body "@copilot please run the 'wiki-sync' skill on this branch."
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
