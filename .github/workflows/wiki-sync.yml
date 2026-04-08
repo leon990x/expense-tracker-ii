@@ -1,0 +1,48 @@
+name: Sync Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'wiki/**'
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone wiki repository
+        run: |
+          git clone "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.wiki.git" /tmp/wiki-repo
+
+      - name: Clear existing wiki content
+        run: |
+          cd /tmp/wiki-repo
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          # Remove all markdown files
+          find . -maxdepth 1 -name '*.md' -delete
+
+      - name: Copy wiki folder contents
+        run: |
+          cp wiki/*.md /tmp/wiki-repo/
+
+      - name: Generate _Sidebar.md
+        run: |
+          cd /tmp/wiki-repo
+          printf '## Wiki\n\n' > _Sidebar.md
+          for f in $(ls *.md | grep -v '_Sidebar.md' | sort); do
+            title="${f%.md}"
+            printf -- '- [%s](%s)\n' "$title" "$title" >> _Sidebar.md
+          done
+
+      - name: Commit and push to wiki
+        run: |
+          cd /tmp/wiki-repo
+          git add .
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Sync wiki from wiki/ folder [skip ci]"
+          git push "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.wiki.git" master
