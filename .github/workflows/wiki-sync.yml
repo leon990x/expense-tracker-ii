@@ -6,44 +6,34 @@ on:
     branches: [main]
     paths:
       - 'wiki/**'
+      - '**/*.docs.md'
+      - 'docs_old/**'
       - '.github/workflows/wiki-sync.yml'
 
 jobs:
   sync-wiki:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # allows GITHUB_TOKEN to push back to the repo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Clone wiki repository
+      - name: Regenerate _Sidebar.md
         run: |
-          git clone "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.wiki.git" /tmp/wiki-repo
-
-      - name: Clear existing wiki content
-        run: |
-          cd /tmp/wiki-repo
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          # Remove all markdown files
-          find . -maxdepth 1 -name '*.md' -delete
-
-      - name: Copy wiki folder contents
-        run: |
-          cp wiki/*.md /tmp/wiki-repo/
-
-      - name: Generate _Sidebar.md
-        run: |
-          cd /tmp/wiki-repo
-          printf '## Wiki\n\n' > _Sidebar.md
-          for f in $(ls *.md | grep -v '_Sidebar.md' | sort); do
-            title="${f%.md}"
-            printf -- '- [%s](%s)\n' "$title" "$title" >> _Sidebar.md
+          printf '## Wiki\n\n' > wiki/_Sidebar.md
+          for f in wiki/*.md; do
+            [[ "$(basename "$f")" == "_Sidebar.md" ]] && continue
+            title=$(basename "${f%.md}")
+            printf -- '- [%s](%s)\n' "$title" "$title" >> wiki/_Sidebar.md
           done
 
-      - name: Commit and push to wiki
+      - name: Commit wiki changes
         run: |
-          cd /tmp/wiki-repo
-          git add .
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "Sync wiki from wiki/ folder [skip ci]"
-          git push "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.wiki.git" master
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add wiki/
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "docs: auto-regenerate wiki sidebar [skip ci]" && git push origin HEAD

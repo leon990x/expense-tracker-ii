@@ -1,10 +1,10 @@
 name: Trigger Copilot Wiki Sync
 on:
-  push: # remove for prod
-    branches: [main]
   pull_request:
-    types: [opened, synchronize, closed]
-    paths: ["**.doc.md"] # Only pings if docs are touched
+    types: [opened, synchronize]
+    paths:
+      - "**/*.docs.md"   # Only trigger when .docs.md extension files are touched
+      - "docs_old/**"
 
 jobs:
   ping-copilot:
@@ -15,10 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Summon Copilot to current PR
-        if: github.event_name == 'pull_request' && (github.event.action != 'closed' || github.event.pull_request.merged == true)
+      - name: Summon Copilot to update wiki in this PR
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
-            --body "@copilot please run the 'wiki-sync' skill on this branch."
+            --body "@copilot please run the 'wiki-sync' skill on this branch. Analyze all \`*.docs.md\` and \`docs_old/**\` files, generate organized wiki pages into \`wiki/\`, and commit the result back to this PR branch so the wiki update is included when this PR is merged."
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
