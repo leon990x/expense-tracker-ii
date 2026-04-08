@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'wiki/**'
+      - '.github/workflows/wiki-sync.yml'
 
 jobs:
   sync-wiki:
