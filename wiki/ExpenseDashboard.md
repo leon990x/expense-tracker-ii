@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Displays expandable expense summaries for today, this week, and this month; supports inline add, edit, delete, and bulk category updates with optimistic UI.
+Displays expandable and collapsible expense summaries for today, this week, and this month; supports inline add, edit, delete, and bulk category updates with optimistic UI.
 
 ## File
 

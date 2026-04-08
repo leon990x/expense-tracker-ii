@@ -7,10 +7,16 @@ on:
     paths:
       - 'wiki/**'
       - '.github/workflows/wiki-sync.yml'
+  pull_request:
+      types: [opened, synchronize, closed]
+      paths: ["**.md"] # Only pings if docs are touched
 
 jobs:
   sync-wiki:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
