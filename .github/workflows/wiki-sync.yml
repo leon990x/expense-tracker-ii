@@ -1,49 +1,58 @@
-name: Sync Wiki
+name: Sync Wiki (safety net on direct push to main)
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'wiki/**'
+      - '**/*.md'
       - '.github/workflows/wiki-sync.yml'
 
 jobs:
   sync-wiki:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # GITHUB_TOKEN can read/clone the wiki as part of this repo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Clone wiki repository
+      - name: Clone GitHub Wiki
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git clone "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.wiki.git" /tmp/wiki-repo
+          git clone \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git" \
+            /tmp/wiki-repo
 
-      - name: Clear existing wiki content
+      - name: Copy wiki/ pages and regenerate _Sidebar.md
+        run: |
+          if compgen -G 'wiki/*.md' > /dev/null; then
+            cp wiki/*.md /tmp/wiki-repo/
+          fi
+          printf '## Wiki\n\n' > /tmp/wiki-repo/_Sidebar.md
+          shopt -s nullglob
+          for f in /tmp/wiki-repo/*.md; do
+            [[ "$(basename "$f")" == "_Sidebar.md" ]] && continue
+            title=$(basename "${f%.md}")
+            printf -- '- [%s](%s)\n' "$title" "$title" >> /tmp/wiki-repo/_Sidebar.md
+          done
+
+      - name: Commit and push to wiki
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd /tmp/wiki-repo
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          # Remove all markdown files
-          find . -maxdepth 1 -name '*.md' -delete
-
-      - name: Copy wiki folder contents
-        run: |
-          cp wiki/*.md /tmp/wiki-repo/
-
-      - name: Generate _Sidebar.md
-        run: |
-          cd /tmp/wiki-repo
-          printf '## Wiki\n\n' > _Sidebar.md
-          for f in $(ls *.md | grep -v '_Sidebar.md' | sort); do
-            title="${f%.md}"
-            printf -- '- [%s](%s)\n' "$title" "$title" >> _Sidebar.md
-          done
-
-      - name: Commit and push to wiki
-        run: |
-          cd /tmp/wiki-repo
           git add .
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "Sync wiki from wiki/ folder [skip ci]"
-          git push "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.wiki.git" master
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: sync wiki from main [skip ci]" && \
+              git push \
+                "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git" \
+                HEAD:master
+          fi
