@@ -1,21 +1,30 @@
 ---
 name: wiki-sync
-description: Analyzes documentation files and builds an organized wiki into the wiki/ folder of the main repo. No PAT required — uses only the built-in GITHUB_TOKEN.
+description: Analyzes .md documentation files and pushes organized pages to the GitHub wiki repository using only GITHUB_TOKEN. No PAT required.
 ---
-# Wiki Sync Protocol (Credential-Free)
+# Wiki Sync Protocol
 
-Wiki content lives at `wiki/` inside this repository. **Do not push to `.wiki.git`.**
-All changes are committed directly to the current branch using standard `git` commands.
+Target: the **GitHub wiki repository** at `<repo>.wiki.git`.  
+Authentication: `GITHUB_TOKEN` only — never a Personal Access Token.
 
 ## Steps
 
-### 1. Discover Source Docs
-Scan the entire codebase for:
-- All `**/*.docs.md` files (inline source documentation)
-- All `docs_old/**/*.md` files (legacy documentation)
+### 1. Identify Source Documents
+
+**If running on a PR branch** — collect only the `.md` files changed in this PR:
+```bash
+git fetch origin main
+git diff --name-only origin/main...HEAD | grep '\.md$'
+```
+
+**If running on `main` (post-merge)** — collect all `.md` files in the repository:
+```bash
+find . -name '*.md' -not -path './.git/*'
+```
 
 ### 2. Analyze & Organize
-Read every discovered doc file. Group them into these categories:
+
+Read every relevant `.md` file. Group them into categories:
 - **Components** — UI components (SummaryTile, ExpenseForm, BudgetCard, AppNavigation, …)
 - **Dashboards** — Page-level dashboard components (ExpenseDashboard, BudgetDashboard, …)
 - **App** — Next.js App Router pages (HomePage, BudgetPage, RootLayout, …)
@@ -23,27 +32,50 @@ Read every discovered doc file. Group them into these categories:
 - **Types** — TypeScript type definitions (Expense, Budget, …)
 - **Other** — Anything that does not fit the above categories
 
-### 3. Generate Organized Wiki Pages
-For each category that has at least one doc, create or fully overwrite `wiki/<Category>.md`:
-- Use a top-level `# <Category>` heading.
-- Add a sub-section `## <TopicName>` for each individual doc within that category.
-- Preserve all technical details (props, functions, behavior, file paths) from the source docs.
-- Add cross-links between related pages using wiki-relative links, e.g. `[Data](Data)`.
+### 3. Clone the GitHub Wiki
 
-### 4. Regenerate Home.md
-Rewrite `wiki/Home.md` as a table-of-contents page:
-- Brief project description (DollarVis — Next.js expense-tracking dashboard).
-- A table listing every page now in `wiki/` with a one-sentence description.
-- Tech-stack summary.
-- Project-layout summary.
-
-### 5. Commit to the Current Branch
 ```bash
+git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" /tmp/wiki-repo
+cd /tmp/wiki-repo
 git config user.email "github-actions[bot]@users.noreply.github.com"
 git config user.name "github-actions[bot]"
-git add wiki/
-git diff --cached --quiet && echo "No changes." && exit 0
-git commit -m "docs: sync wiki from *.docs.md files [skip ci]"
-git push origin HEAD
 ```
-This commits the updated `wiki/` folder to the **current branch** (the PR branch if invoked from a PR, or `main` if run manually). When the PR is merged, the wiki lands in `main` automatically — no separate wiki PR needed.
+
+### 4. Generate Organized Wiki Pages
+
+For each category that has at least one document, create or fully overwrite `/tmp/wiki-repo/<Category>.md`:
+- `# <Category>` as the top-level heading
+- `## <TopicName>` sub-section per document within that category
+- Preserve all technical details (props, functions, behavior, file paths)
+- Add cross-links between related pages using wiki-relative links, e.g. `[Data](Data)`
+
+Regenerate `/tmp/wiki-repo/Home.md` as a full table-of-contents:
+- Brief project description (DollarVis — Next.js expense-tracking dashboard)
+- Table listing every wiki page with a one-sentence description
+- Tech-stack summary and project-layout summary
+
+Regenerate `/tmp/wiki-repo/_Sidebar.md`:
+```bash
+printf '## Wiki\n\n' > /tmp/wiki-repo/_Sidebar.md
+shopt -s nullglob
+for f in /tmp/wiki-repo/*.md; do
+  [[ "$(basename "$f")" == "_Sidebar.md" ]] && continue
+  title=$(basename "${f%.md}")
+  printf -- '- [%s](%s)\n' "$title" "$title" >> /tmp/wiki-repo/_Sidebar.md
+done
+```
+
+### 5. Commit and Push to the GitHub Wiki
+
+```bash
+cd /tmp/wiki-repo
+git add .
+if git diff --cached --quiet; then
+  echo "No wiki changes to commit."
+  exit 0
+fi
+git commit -m "docs: sync wiki [skip ci]"
+git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" HEAD:master
+```
+
+**Important:** Use the `GITHUB_TOKEN` environment variable that is already present — never a Personal Access Token.
