@@ -1,0 +1,31 @@
+name: Trigger Copilot Wiki Sync
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+    paths:
+      - "**/*.md"   # Trigger whenever any Markdown file is added or changed
+
+jobs:
+  ping-copilot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ping Copilot on PR update (sync wiki from PR branch)
+        if: github.event.action != 'closed'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "@copilot please run the 'wiki-sync' skill on this branch. The PR contains changes to .md files. Analyze all changed .md files in this PR branch, generate organized wiki pages, and push them to the GitHub wiki repository (\`${{ github.repository }}.wiki.git\`) using \`GITHUB_TOKEN\`."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ping Copilot after PR merge (sync wiki from main)
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "@copilot please run the 'wiki-sync' skill on the \`main\` branch. This PR has been merged and it contained .md file changes. Analyze all .md files now on main, generate organized wiki pages, and push them to the GitHub wiki repository (\`${{ github.repository }}.wiki.git\`) using \`GITHUB_TOKEN\`."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
