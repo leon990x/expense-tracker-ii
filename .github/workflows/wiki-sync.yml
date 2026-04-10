@@ -7,6 +7,9 @@ on:
     paths:
       - '**/*.md'
       - '.github/workflows/wiki-sync.yml'
+  pull_request:
+      types: [opened, synchronize, closed]
+      paths: ["**.md"] # Only pings if docs are touched
 
 jobs:
   sync-wiki:
