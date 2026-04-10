@@ -4,7 +4,7 @@
 - Framework: Next.js 14+ with NEXT App Router
 - Language: TypeScript (strict typing expected)
 - UI: Tailwind CSS + Lucide React icons
-- Storage: local JSON file (`data/expenses.json`)
+- Storage: local SQLite database (`data/expense-tracker.sqlite`) via `src/lib/sqlite.ts`/`getDb()`
 
 ## Key Architectural Boundaries
 1. Use server components for data fetch and static layout composition.
@@ -29,9 +29,9 @@
 
 ## Mutation Flow
 1. Client form submits payload to a server action.
-2. Server action reads current JSON state, applies mutation, and writes updated content.
-3. `revalidatePath('/')` is called so the dashboard rerenders with current totals.
-4. UI should remain responsive and avoid a full-page refresh pattern.
+2. Server action applies the mutation through `getDb()` (SQLite) and persists changes to `data/expense-tracker.sqlite`.
+3. The mutation revalidates both `revalidatePath('/')` and `revalidatePath('/budget')` so the dashboard and budget views rerender with current data.
+4. UI should remain responsive and avoid a full-page refresh pattern while keeping both routes in sync after a mutation.
 
 ## Data Handling Notes
 1. Keep category strings aligned with the `Category` union type to avoid invalid data.
@@ -40,8 +40,8 @@
 4. Treat IDs as immutable keys across rendering and edits.
 
 ## Operational Constraints
-1. JSON file storage is simple but not concurrency-safe under heavy parallel writes.
-2. If write contention appears, introduce file locking or migrate to a transactional store.
+1. SQLite storage is not concurrency-safe under heavy parallel writes without additional locking.
+2. If write contention appears, consider introducing WAL mode or migrating to a transactional server-side store.
 3. For now, architecture is optimized for local development and lightweight single-user usage.
 
 ## Documentation and Wiki Sync Notes

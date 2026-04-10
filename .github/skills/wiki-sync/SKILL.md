@@ -24,7 +24,12 @@ Target source document types (repository-wide):
 **If running on a PR branch** — collect only matching files changed in this PR:
 ```bash
 git fetch origin main
-git diff --name-only origin/main...HEAD | grep -E '(^|/)BUSINESS-RULES\.md$|(^|/)TECHNICAL-NOTES\.md$|\.doc\.md$'
+matching_files="$(git diff --name-only origin/main...HEAD | grep -E '(^|/)BUSINESS-RULES\.md$|(^|/)TECHNICAL-NOTES\.md$|\.doc\.md$' || true)"
+if [ -z "$matching_files" ]; then
+  echo "No matching docs to sync"
+  exit 0
+fi
+printf '%s\n' "$matching_files"
 ```
 
 **If running on `main` (post-merge)** — collect all matching files anywhere in the repository:
