@@ -18,7 +18,7 @@ Renders three budget tiles (titled `Daily`, `Weekly`, `Monthly`) and manages whi
 
 - Client component using local state.
 - Tracks expanded tiles with a `Set` of tile IDs (`today`, `week`, `month`).
-- Initializes with `month` expanded.
+- Initializes with `month` expanded by default so users see the monthly overview on first load.
 - Passes tile-specific data and toggle handlers into `BudgetCard`.
 
 ## Rendered Structure
