@@ -30,8 +30,8 @@
 ## Mutation Flow
 1. Client form submits payload to a server action.
 2. Server action reads current JSON state, applies mutation, and writes updated content.
-3. `revalidatePath('/')` is called so the dashboard rerenders with current totals.
-4. UI should remain responsive and avoid a full-page refresh pattern.
+3. The mutation revalidates both `revalidatePath('/')` and `revalidatePath('/budget')` so the dashboard and budget views rerender with current data.
+4. UI should remain responsive and avoid a full-page refresh pattern while keeping both routes in sync after a mutation.
 
 ## Data Handling Notes
 1. Keep category strings aligned with the `Category` union type to avoid invalid data.

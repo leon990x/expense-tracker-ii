@@ -11,7 +11,7 @@ DollarVis tracks personal expenses and presents totals through Daily, Weekly, an
 5. `id` is system-generated and must remain stable after creation.
 
 ## Category Rules
-1. Allowed categories are Food, Transport, Housing, Entertainment, Utilities, Healthcare, and Other.
+1. Allowed categories are Food, Transport, Housing, Entertainment, Utilities, Healthcare, Merchandise, Investments, Subscriptions, Coffee, and Other.
 2. Category values are strict and case-sensitive to keep aggregation reliable.
 3. Summary breakdowns must group totals by category.
 
@@ -23,9 +23,9 @@ DollarVis tracks personal expenses and presents totals through Daily, Weekly, an
 5. The user flow must feel no-refresh after mutations.
 
 ## Data and Persistence Rules
-1. Expenses are stored in a local JSON file (`data/expenses.json`).
-2. No external database is used in the current architecture.
-3. Add/Edit operations are executed through server actions.
+1. Expenses are stored in a local SQLite database file (`data/expense-tracker.sqlite`).
+2. No external database service is used in the current architecture; persistence is handled locally through SQLite.
+3. Add/Edit operations are executed through the server-side persistence layer backed by `src/lib/sqlite.ts`.
 4. After each mutation, the home route is revalidated so totals and lists refresh immediately.
 
 ## Integrity and UX Rules
