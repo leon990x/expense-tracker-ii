@@ -1,7 +1,7 @@
 # Technical Notes
 
 ## Stack and Runtime
-- Framework: Next.js 14+ with App Router
+- Framework: Next.js 14+ with NEXT App Router
 - Language: TypeScript (strict typing expected)
 - UI: Tailwind CSS + Lucide React icons
 - Storage: local JSON file (`data/expenses.json`)
