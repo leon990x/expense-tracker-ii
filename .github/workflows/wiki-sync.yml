@@ -1,4 +1,4 @@
-name: Sync Wiki (safety net on direct push to main)
+name: Wiki Sync
 
 on:
   workflow_dispatch:
@@ -8,19 +8,20 @@ on:
       - '**/*.md'
       - '.github/workflows/wiki-sync.yml'
   pull_request:
-      types: [opened, synchronize, closed]
-      paths: ["**.md"] # Only pings if docs are touched
+    types: [opened, synchronize, closed]
+    paths: ['**/*.md']
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   sync-wiki:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write   # GITHUB_TOKEN can read/clone the wiki as part of this repo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clone GitHub Wiki
         env:
@@ -54,8 +55,28 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs: sync wiki from main [skip ci]" && \
-              git push \
-                "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git" \
-                HEAD:master
+            git commit -m "docs: sync wiki from main [skip ci]"
+            git push \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.wiki.git" \
+              HEAD:master
           fi
+
+  ping-copilot:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Copilot on PR update
+        if: github.event.action != 'closed'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "@copilot please run the 'wiki-sync' skill on this branch. The PR contains changes to .md files. Analyze all changed .md files in this PR branch, generate organized wiki pages, and push them to the GitHub wiki repository (\`${{ github.repository }}.wiki.git\`) using \`GITHUB_TOKEN\`."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ping Copilot after PR merge
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "@copilot please run the 'wiki-sync' skill on the \`main\` branch. This PR has been merged and it contained .md file changes. Analyze all .md files now on main, generate organized wiki pages, and push them to the GitHub wiki repository (\`${{ github.repository }}.wiki.git\`) using \`GITHUB_TOKEN\`."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
