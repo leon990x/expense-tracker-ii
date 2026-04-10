@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Renders three budget tiles (titled `Daily`, `Weekly`, `Monthly`) and manages which tiles are expanded.
+Renders three expandable budget tiles (titled `Daily`, `Weekly`, `Monthly`) and manages which tiles are expanded.
 
 ## File
 
