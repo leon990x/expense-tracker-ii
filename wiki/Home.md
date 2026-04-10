@@ -1,4 +1,4 @@
-# DollarVis — Wiki Home
+# DollarVis — Wiki
 
 **DollarVis** is a Next.js expense-tracking dashboard that lets you log expenses, set per-category budget limits, and view spending summaries across daily, weekly, and monthly timeframes — all with optimistic UI and no full-page reloads.
 
