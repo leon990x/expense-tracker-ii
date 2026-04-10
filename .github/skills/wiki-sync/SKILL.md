@@ -8,9 +8,10 @@ Target: the local repository `wiki/` folder.
 Publishing responsibility: `.github/workflows/wiki-sync.yml` only.
 
 Role boundary:
-- This skill must **only** read source docs and write generated pages to `wiki/`.
-- This skill must **never** clone, commit, or push to `<repo>.wiki.git`.
-- `wiki-sync.yml` is the only process that publishes `wiki/` content to the repository wiki.
+- This skill must **only** read source docs and write generated pages to the checked-out repository `wiki/` folder.
+- This skill must **never** clone, commit, or push to `<repo>.wiki.git`, and must not directly publish wiki content by interacting with the wiki remote.
+- When invoked by `wiki-sync.yml` on a PR branch, this skill **may** commit and push changes **only** to the `wiki/` folder of the current PR branch. It must not modify, stage, or commit any files outside of `wiki/`.
+- `wiki-sync.yml` is the only process that publishes `wiki/` content to the repository wiki (i.e., to `<repo>.wiki.git`).
 
 ## Steps
 
@@ -21,18 +22,7 @@ Target source document types (repository-wide):
 - `TECHNICAL-NOTES.md`
 - `*.doc.md`
 
-**If running on a PR branch** — collect only matching files changed in this PR:
-```bash
-git fetch origin main
-matching_files="$(git diff --name-only origin/main...HEAD | grep -E '(^|/)BUSINESS-RULES\.md$|(^|/)TECHNICAL-NOTES\.md$|\.doc\.md$' || true)"
-if [ -z "$matching_files" ]; then
-  echo "No matching docs to sync"
-  exit 0
-fi
-printf '%s\n' "$matching_files"
-```
-
-**If running on `main` (post-merge)** — collect all matching files anywhere in the repository:
+**In all contexts (PR branch or `main`)** — collect all matching files anywhere in the repository:
 ```bash
 find . -type f \( -name 'BUSINESS-RULES.md' -o -name 'TECHNICAL-NOTES.md' -o -name '*.doc.md' \) -not -path './.git/*'
 ```
@@ -108,7 +98,27 @@ Minimum expected files when matching sources exist:
 - `wiki/Docs.md`
 - `wiki/Categories.md`
 
-### 5. Handoff To Publisher Workflow
+### 5. Commit Wiki Changes (PR context only)
+
+When invoked on a PR branch by `wiki-sync.yml`, stage and commit **only** `wiki/` changes to the current PR branch:
+
+```bash
+git add wiki/
+if git diff --cached --quiet; then
+  echo "No wiki changes to commit"
+else
+  git config user.email "github-actions[bot]@users.noreply.github.com"
+  git config user.name "github-actions[bot]"
+  git commit -m "docs: sync wiki pages [wiki-sync]"
+  git push origin HEAD
+fi
+```
+
+**Critical constraints:**
+- Only stage and commit files inside `wiki/`. Do **not** run `git add .` or add any files outside of `wiki/`.
+- Do **not** clone or push to `<repo>.wiki.git`.
+
+### 6. Handoff To Publisher Workflow
 
 Do not publish directly from this skill.  
 Publishing happens when `.github/workflows/wiki-sync.yml` runs and syncs `wiki/` to `<repo>.wiki.git`.
