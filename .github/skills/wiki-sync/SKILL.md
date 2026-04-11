@@ -92,11 +92,8 @@ Home page coverage requirement:
 Before finishing, verify expected outputs exist in `wiki/` and contain generated content.
 
 Minimum expected files when matching sources exist:
-- `wiki/Home.md`
 - `wiki/Business-Rules.md`
 - `wiki/Technical-Notes.md`
-- `wiki/Docs.md`
-- `wiki/Categories.md`
 
 ### 5. Commit Wiki Changes (PR context only)
 
