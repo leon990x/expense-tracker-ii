@@ -12,6 +12,7 @@ on:
     paths: ['**/*.md']
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -73,20 +74,27 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Copilot on PR update
-        if: github.event.action != 'closed'
+      - name: Ping Copilot on PR opened
+        if: github.event.action == 'opened'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "@copilot please run the 'wiki-sync' skill on this branch. The PR contains changes to .md files. Analyze all changed .md files in this PR branch, generate organized wiki pages, and push them to the GitHub wiki repository (\`${{ github.repository }}.wiki.git\`) using \`GITHUB_TOKEN\`."
+            --body "@copilot please run the 'wiki-sync' skill on this branch immediately. Follow section '### 3. Generate Wiki Files In wiki/' from .github/skills/wiki-sync/SKILL.md. Analyze BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md files anywhere in this repo, generate/update the wiki pages in the /wiki folder (Home.md and related pages), and commit those /wiki file updates directly to this PR branch. Do not push to the repository wiki in this step."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ping Copilot after PR merge
-        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+      - name: Ping Copilot on PR synchronize
+        if: github.event.action == 'synchronize'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "@copilot please run the 'wiki-sync' skill on the \`main\` branch. This PR has been merged and it contained .md file changes. Analyze all .md files now on main, generate organized wiki pages, and push them to the GitHub wiki repository (\`${{ github.repository }}.wiki.git\`) using \`GITHUB_TOKEN\`."
+            --body "@copilot please rerun the 'wiki-sync' skill immediately for this updated PR branch. Follow section '### 3. Generate Wiki Files In wiki/' from .github/skills/wiki-sync/SKILL.md and refresh all generated pages under /wiki based on BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md files. Commit the refreshed /wiki changes to this PR branch only. Do not publish to the repository wiki in this step."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger wiki-sync after PR merge
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          gh workflow run wiki-sync.yml --repo ${{ github.repository }} --ref main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

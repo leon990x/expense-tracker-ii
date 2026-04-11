@@ -1,11 +1,17 @@
 ---
 name: wiki-sync
-description: Analyzes .md documentation files and pushes organized pages to the GitHub wiki repository using only GITHUB_TOKEN. No PAT required.
+description: Analyzes distributed documentation files and generates organized wiki pages inside the repo wiki/ folder.
 ---
 # Wiki Sync Protocol
 
-Target: the **GitHub wiki repository** at `<repo>.wiki.git`.  
-Authentication: `GITHUB_TOKEN` only — never a Personal Access Token.
+Target: the local repository `wiki/` folder.  
+Publishing responsibility: `.github/workflows/wiki-sync.yml` only.
+
+Role boundary:
+- This skill must **only** read source docs and write generated pages to the checked-out repository `wiki/` folder.
+- This skill must **never** clone, commit, or push to `<repo>.wiki.git`, and must not directly publish wiki content by interacting with the wiki remote.
+- When invoked by `wiki-sync.yml` on a PR branch, this skill **may** commit and push changes **only** to the `wiki/` folder of the current PR branch. It must not modify, stage, or commit any files outside of `wiki/`.
+- `wiki-sync.yml` is the only process that publishes `wiki/` content to the repository wiki (i.e., to `<repo>.wiki.git`).
 
 ## Steps
 
@@ -16,18 +22,7 @@ Target source document types (repository-wide):
 - `TECHNICAL-NOTES.md`
 - `*.doc.md`
 
-**If running on a PR branch** — collect only matching files changed in this PR:
-```bash
-git fetch origin main
-matching_files="$(git diff --name-only origin/main...HEAD | grep -E '(^|/)BUSINESS-RULES\.md$|(^|/)TECHNICAL-NOTES\.md$|\.doc\.md$' || true)"
-if [ -z "$matching_files" ]; then
-  echo "No matching docs to sync"
-  exit 0
-fi
-printf '%s\n' "$matching_files"
-```
-
-**If running on `main` (post-merge)** — collect all matching files anywhere in the repository:
+**In all contexts (PR branch or `main`)** — collect all matching files anywhere in the repository:
 ```bash
 find . -type f \( -name 'BUSINESS-RULES.md' -o -name 'TECHNICAL-NOTES.md' -o -name '*.doc.md' \) -not -path './.git/*'
 ```
@@ -57,42 +52,33 @@ Special classification rules:
 - Preserve source path metadata for each section so wiki readers can trace origin.
 - Do not drop or summarize away policy content; preserve rule and constraint statements verbatim where possible.
 
-### 3. Clone the GitHub Wiki
+### 3. Generate Wiki Files In `wiki/`
 
-```bash
-git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" /tmp/wiki-repo
-cd /tmp/wiki-repo
-git config user.email "github-actions[bot]@users.noreply.github.com"
-git config user.name "github-actions[bot]"
-```
-
-### 4. Generate Organized Wiki Pages
-
-Create an organized wiki structure inside the existing wiki repository using folders plus index pages:
-- `/tmp/wiki-repo/Home.md` (global table of contents)
-- `/tmp/wiki-repo/_Sidebar.md` (navigation)
-- `/tmp/wiki-repo/Business-Rules/` (one page per matched BUSINESS-RULES.md source)
-- `/tmp/wiki-repo/Technical-Notes/` (one page per matched TECHNICAL-NOTES.md source)
-- `/tmp/wiki-repo/Docs/` (one page per matched *.doc.md source)
-- `/tmp/wiki-repo/Categories/` (optional category index pages like Components.md, Data.md)
+Create or update an organized structure under `wiki/`:
+- `wiki/Home.md` (global table of contents)
+- `wiki/Business-Rules.md` (index of Business Rules sources)
+- `wiki/Technical-Notes.md` (index of Technical Notes sources)
+- `wiki/Docs.md` (index of `*.doc.md` sources)
+- `wiki/Categories.md` (index of category pages)
+- `wiki/Categories/<Category>.md` (category-specific grouped pages)
 
 Per generated page requirements:
 - Use a stable title derived from source path (e.g., `src-components-docs-BUSINESS-RULES`).
 - Include source attribution near the top (original repository path).
 - Preserve technical details, constraints, and behavior from source documents.
-- Add wiki-relative cross-links to related pages and category indexes.
+- Add markdown cross-links between related pages in `wiki/`.
 
 Category index page requirements:
-- For each category with at least one mapped document, create or overwrite `/tmp/wiki-repo/Categories/<Category>.md`.
+- For each category with at least one mapped document, create or overwrite `wiki/Categories/<Category>.md`.
 - Render grouped sections: `## Business Rules`, `## Technical Notes`, and `## Docs` (only when present).
-- Under each section, list links to the generated pages in `Business-Rules/`, `Technical-Notes/`, and `Docs/`.
+- Under each section, list links to generated pages and include source-path attribution.
 
 Required rendering for components docs:
-- Ensure source files mapped to Components appear in `/tmp/wiki-repo/Categories/Components.md`.
+- Ensure source files mapped to Components appear in `wiki/Categories/Components.md`.
 - Keep `Business Rules` and `Technical Notes` sections above general `Docs` entries in that page.
-- Include links to the specific generated pages under `Business-Rules/` and `Technical-Notes/`.
+- Include links to the relevant entries from `wiki/Business-Rules.md` and `wiki/Technical-Notes.md`.
 
-Regenerate `/tmp/wiki-repo/Home.md` as a full table-of-contents:
+Regenerate `wiki/Home.md` as a full table-of-contents:
 - Brief project description
 - Top-level links to `Business-Rules`, `Technical-Notes`, `Docs`, and `Categories`
 - Table listing generated pages with one-sentence descriptions and source paths
@@ -101,33 +87,40 @@ Regenerate `/tmp/wiki-repo/Home.md` as a full table-of-contents:
 Home page coverage requirement:
 - Explicitly mention that Components category includes Business Rules and Technical Notes sections when present.
 
-Regenerate `/tmp/wiki-repo/_Sidebar.md`:
-```bash
-printf '## Wiki\n\n' > /tmp/wiki-repo/_Sidebar.md
-printf -- '- [Home](Home)\n' >> /tmp/wiki-repo/_Sidebar.md
-printf -- '- [Business Rules](Business-Rules)\n' >> /tmp/wiki-repo/_Sidebar.md
-printf -- '- [Technical Notes](Technical-Notes)\n' >> /tmp/wiki-repo/_Sidebar.md
-printf -- '- [Docs](Docs)\n' >> /tmp/wiki-repo/_Sidebar.md
-printf -- '- [Categories](Categories)\n' >> /tmp/wiki-repo/_Sidebar.md
-```
+### 4. Validate Wiki Folder Output
 
-Also create index pages when content exists:
-- `/tmp/wiki-repo/Business-Rules.md` linking all pages in `Business-Rules/`
-- `/tmp/wiki-repo/Technical-Notes.md` linking all pages in `Technical-Notes/`
-- `/tmp/wiki-repo/Docs.md` linking all pages in `Docs/`
-- `/tmp/wiki-repo/Categories.md` linking all pages in `Categories/`
+Before finishing, verify expected outputs exist in `wiki/` and contain generated content.
 
-### 5. Commit and Push to the GitHub Wiki
+Minimum expected files when matching sources exist:
+- `wiki/Home.md`
+- `wiki/Business-Rules.md`
+- `wiki/Technical-Notes.md`
+- `wiki/Docs.md`
+- `wiki/Categories.md`
+
+### 5. Commit Wiki Changes (PR context only)
+
+When invoked on a PR branch by `wiki-sync.yml`, stage and commit **only** `wiki/` changes to the current PR branch:
 
 ```bash
-cd /tmp/wiki-repo
-git add .
+git add wiki/
 if git diff --cached --quiet; then
-  echo "No wiki changes to commit."
-  exit 0
+  echo "No wiki changes to commit"
+else
+  git config user.email "github-actions[bot]@users.noreply.github.com"
+  git config user.name "github-actions[bot]"
+  git commit -m "docs: sync wiki pages [wiki-sync]"
+  git push origin HEAD
 fi
-git commit -m "docs: sync wiki [skip ci]"
-git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" HEAD:master
 ```
 
-**Important:** Use the `GITHUB_TOKEN` environment variable that is already present — never a Personal Access Token.
+**Critical constraints:**
+- Only stage and commit files inside `wiki/`. Do **not** run `git add .` or add any files outside of `wiki/`.
+- Do **not** clone or push to `<repo>.wiki.git`.
+
+### 6. Handoff To Publisher Workflow
+
+Do not publish directly from this skill.  
+Publishing happens when `.github/workflows/wiki-sync.yml` runs and syncs `wiki/` to `<repo>.wiki.git`.
+
+**Important:** This skill must never perform clone/push operations against the wiki repository.

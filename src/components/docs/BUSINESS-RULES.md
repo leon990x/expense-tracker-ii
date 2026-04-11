@@ -1,7 +1,7 @@
 # Business Rules
 
 ## Purpose
-DollarVis tracks personal expenses and presents totals through Daily, Weekly, and Monthly dashboard summaries. The product goal is to provide fast entry and immediate visibility into spending patterns.
+DollarVis tracks personal expenses and presents totals through Daily, Weekly, and Monthly dashboard summaries. The product goal is to provide fast entry and immediate visibility into spending patterns for timeframes selected by the user.
 
 ## Expense Domain Rules
 1. Every expense must include `amount`, `category`, `date`, and `description`.
