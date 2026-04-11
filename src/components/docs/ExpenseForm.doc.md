@@ -21,7 +21,7 @@
 6. If validation fails, an inline error message is shown.
 
 ## Validation Rules
-- `amount` must be a finite number greater than `0`.
+- `amount` must be a finite number greater than zero `0`.
 - `category` must match one of the allowed `Category` values.
 - `date` is required.
 - `description` is optional and trimmed.
