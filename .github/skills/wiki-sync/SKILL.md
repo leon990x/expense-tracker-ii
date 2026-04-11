@@ -18,17 +18,18 @@ Role boundary:
 ### 1. Identify Source Documents
 
 Target source document types (repository-wide):
-- `BUSINESS-RULES.md`
-- `TECHNICAL-NOTES.md`
+- `Business-Rules.md` / `BUSINESS-RULES.md` (case-insensitive)
+- `Technical-Notes.md` / `TECHNICAL-NOTES.md` (case-insensitive)
 - `*.doc.md`
 
 **In all contexts (PR branch or `main`)** — collect all matching files anywhere in the repository:
 ```bash
-find . -type f \( -name 'BUSINESS-RULES.md' -o -name 'TECHNICAL-NOTES.md' -o -name '*.doc.md' \) -not -path './.git/*'
+find . -type f \( -iname 'business-rules.md' -o -iname 'technical-notes.md' -o -name '*.doc.md' \) -not -path './.git/*' -not -path './wiki/*'
 ```
 
 Important:
 - Search the entire repo; do not limit to one folder.
+- Exclude `wiki/` from source scanning to avoid recursive copies.
 - If no matching files are found, exit successfully with "No matching docs to sync".
 
 ### 2. Analyze & Organize
@@ -52,40 +53,53 @@ Special classification rules:
 - Preserve source path metadata for each section so wiki readers can trace origin.
 - Do not drop or summarize away policy content; preserve rule and constraint statements verbatim where possible.
 
-### 3. Generate Wiki Files In `wiki/`
+### 3. Copy Source Docs to `wiki/` with Prefixed Names
 
-Create or update an organized structure under `wiki/`:
-- `wiki/Home.md` (global table of contents)
-- `wiki/Business-Rules.md` (index of Business Rules sources)
-- `wiki/Technical-Notes.md` (index of Technical Notes sources)
-- `wiki/Docs.md` (index of `*.doc.md` sources)
-- `wiki/Categories.md` (index of category pages)
-- `wiki/Categories/<Category>.md` (category-specific grouped pages)
+#### 3a. PR context — copy new or changed files
 
-Per generated page requirements:
-- Use a stable title derived from source path (e.g., `src-components-docs-BUSINESS-RULES`).
-- Include source attribution near the top (original repository path).
-- Preserve technical details, constraints, and behavior from source documents.
-- Add markdown cross-links between related pages in `wiki/`.
+When invoked on a PR branch, detect which source doc files are **new or changed** in the PR (compared to the base branch) and copy each one into `wiki/` using the following naming convention:
 
-Category index page requirements:
-- For each category with at least one mapped document, create or overwrite `wiki/Categories/<Category>.md`.
-- Render grouped sections: `## Business Rules`, `## Technical Notes`, and `## Docs` (only when present).
-- Under each section, list links to generated pages and include source-path attribution.
+**Output name rules:**
 
-Required rendering for components docs:
-- Ensure source files mapped to Components appear in `wiki/Categories/Components.md`.
-- Keep `Business Rules` and `Technical Notes` sections above general `Docs` entries in that page.
-- Include links to the relevant entries from `wiki/Business-Rules.md` and `wiki/Technical-Notes.md`.
+| Source file pattern | Output name in `wiki/` |
+|---|---|
+| `*/…/<ParentFolder>/Business-Rules.md` (any case) | `wiki/<ParentFolder>-Business-Rules.md` |
+| `*/…/<ParentFolder>/Technical-Notes.md` (any case) | `wiki/<ParentFolder>-Technical-Notes.md` |
+| `*/…/<Stem>.doc.md` | `wiki/<Stem>-Doc.md` |
 
-Regenerate `wiki/Home.md` as a full table-of-contents:
-- Brief project description
-- Top-level links to `Business-Rules`, `Technical-Notes`, `Docs`, and `Categories`
-- Table listing generated pages with one-sentence descriptions and source paths
-- Tech-stack and project-layout summary when available from source docs
+Where:
+- `<ParentFolder>` is the **immediate parent directory name** of the file.
+- `<Stem>` for a `*.doc.md` file is the base name with `.doc.md` stripped (e.g., `ExpenseForm.doc.md` → stem `ExpenseForm`).
 
-Home page coverage requirement:
-- Explicitly mention that Components category includes Business Rules and Technical Notes sections when present.
+Examples:
+- `src/components/AppNavigation/Business-Rules.md` → `wiki/AppNavigation-Business-Rules.md`
+- `src/components/BudgetDashboard/Technical-Notes.md` → `wiki/BudgetDashboard-Technical-Notes.md`
+- `src/components/docs/ExpenseForm.doc.md` → `wiki/ExpenseForm-Doc.md`
+
+To detect changed files on a PR branch use:
+```bash
+git diff --name-only origin/HEAD...HEAD
+```
+Then filter that list to include only files matching the source document patterns.
+
+Per-file copy requirements:
+- Write the full source file content into the output wiki path.
+- Add a source-attribution header at the top of each copied page: `> Source: <original-repo-path>`.
+- If the output file already exists, overwrite it.
+
+#### 3b. Maintain aggregate index files
+
+After copying, regenerate the two aggregate index files:
+
+**`wiki/Business-Rules.md`** — index of all `*-Business-Rules.md` pages in `wiki/`:
+- One entry per copied file with a link and the source path.
+
+**`wiki/Technical-Notes.md`** — index of all `*-Technical-Notes.md` pages in `wiki/`:
+- One entry per copied file with a link and the source path.
+
+#### 3c. Main branch — full sync
+
+When invoked on the `main` branch (not a PR), process **all** matching source docs (not just changed ones) and apply the same copy-with-prefix rules above to ensure `wiki/` is fully up to date.
 
 ### 4. Validate Wiki Folder Output
 
