@@ -9,7 +9,7 @@ on:
       - '.github/workflows/wiki-sync.yml'
   pull_request:
     types: [opened, synchronize, closed]
-    paths: ['**/*.md']
+    paths-ignore: ['wiki/**']
 
 permissions:
   actions: write
