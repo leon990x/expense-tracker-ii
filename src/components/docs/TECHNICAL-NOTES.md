@@ -20,12 +20,12 @@
 - `src/components/AppNavigation.tsx`: top-level app navigation links and active-route styling
 
 ## AppNavigation.tsx Technical Notes
-1. `AppNavigation.tsx` is a client component because it uses `usePathname()` from `next/navigation`.
+1. `AppNavigation.tsx` is a client component because it uses `usePathname()` from `next/navigation`.s
 2. Active state styling is computed in `getTileClassName(href)` using exact equality (`pathname === href`).
 3. Navigation uses `next/link` for route transitions to preserve Next.js client-side navigation behavior.
 4. The component currently renders two links only: `/` (Dashboard) and `/budget` (Budget).
 5. Shared Tailwind utility classes are centralized in `getTileClassName` to keep active and inactive variants consistent.
-6. Accessibility baseline is provided via `nav[aria-label="Primary"]`; link text remains the accessible name.
+6. Accessibility baseline is provided via `nav[aria-label="Primary"]`. link text remains the accessible name.
 
 ## Mutation Flow
 1. Client form submits payload to a server action.

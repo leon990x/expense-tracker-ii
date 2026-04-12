@@ -12,6 +12,7 @@ Role boundary:
 - This skill must **never** clone, commit, or push to `<repo>.wiki.git`, and must not directly publish wiki content by interacting with the wiki remote.
 - When invoked by `wiki-sync.yml` on a PR branch, this skill **may** commit and push changes **only** to the `wiki/` folder of the current PR branch. It must not modify, stage, or commit any files outside of `wiki/`.
 - `wiki-sync.yml` is the only process that publishes `wiki/` content to the repository wiki (i.e., to `<repo>.wiki.git`).
+- In PR context, this skill must execute in strict order: (1) detect matching docs, (2) copy/update `wiki/` files, (3) commit `wiki/` changes, and only then (4) optionally provide review commentary. It must not review or comment on unrelated code before `wiki/` sync is complete.
 
 ## Steps
 
@@ -56,6 +57,10 @@ Special classification rules:
 ### 3. Copy Source Docs to `wiki/` with Prefixed Names
 
 #### 3a. PR context — copy new or changed files
+
+Execution-order requirement for PR context:
+- Complete this copy/update step before any review comments are posted.
+- If `wiki/` changes are needed, ensure they are committed first.
 
 When invoked on a PR branch, detect which source doc files are **new or changed** in the PR (compared to the base branch) and copy each one into `wiki/` using the following naming convention:
 
@@ -128,6 +133,7 @@ fi
 **Critical constraints:**
 - Only stage and commit files inside `wiki/`. Do **not** run `git add .` or add any files outside of `wiki/`.
 - Do **not** clone or push to `<repo>.wiki.git`.
+- Do not start code review comments before this commit step finishes.
 
 ### 6. Handoff To Publisher Workflow
 
