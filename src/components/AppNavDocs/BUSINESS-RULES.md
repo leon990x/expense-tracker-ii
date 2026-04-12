@@ -4,8 +4,8 @@
 These rules define expected behavior for app routing and navigation documentation under src/app/components/AppNavDocs.
 
 ## Route Rules
-1. Navigation must include Dashboard route at /.
-2. Navigation must include Budget route at /budget.
+1. Navigation must include dashboard route at /.
+2. Navigation must include budget route at /budget.
 3. Route-to-label mapping must remain stable unless explicitly changed in requirements.
 
 ## Active State Rules
