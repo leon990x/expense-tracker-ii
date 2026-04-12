@@ -73,6 +73,6 @@ Date input is normalized with a midday timestamp (`${date}T12:00:00`) before `to
 - Component is intended for inline rendering in expanded dashboard tiles.
 
 ## Integration Guidance
-- Parent should treat optimistic items as temporary and reconcile after server revalidation.
+- Parent should treat optimistic items as temporary and reconcile after server revalidates.
 - Parent should avoid duplicate rendering if both optimistic and server-refetched items are present.
 - Keep this component as a client component; it depends on `useActionState`, `useOptimistic`, and `useEffect`.

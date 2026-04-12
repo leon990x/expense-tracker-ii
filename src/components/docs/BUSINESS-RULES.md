@@ -5,7 +5,7 @@ DollarVis tracks personal expenses and presents totals through Daily, Weekly, an
 
 ## Expense Domain Rules
 1. Every expense must include `amount`, `category`, `date`, and `description`.
-2. `amount` must be a positive number greater than 0.
+2. `amount` must be a positive number greater than zero (0).
 3. `date` must be stored as an ISO 8601 string.
 4. `description` should be human-readable and non-empty.
 5. `id` is system-generated and must remain stable after creation.
