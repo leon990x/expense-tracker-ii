@@ -79,7 +79,7 @@ jobs:
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "@copilot please run the 'wiki-sync' skill on this branch immediately. Follow section '### 3. Generate Wiki Files In wiki/' from .github/skills/wiki-sync/SKILL.md. Analyze BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md files anywhere in this repo, generate/update the wiki pages in the /wiki folder (Home.md and related pages), and commit those /wiki file updates directly to this PR branch. Do not push to the repository wiki in this step."
+            --body "@copilot run the 'wiki-sync' skill on this branch with strict ordering. FIRST: follow section '### 3. Copy Source Docs to wiki/ with Prefixed Names' in .github/skills/wiki-sync/SKILL.md, generate/update /wiki pages from BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md files, and commit only /wiki changes to this PR branch. SECOND: only after that commit is complete, continue with any review commentary. Do not post review comments before wiki sync is done. Do not publish to the repository wiki in this step."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,7 +88,7 @@ jobs:
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "@copilot please rerun the 'wiki-sync' skill immediately for this updated PR branch. Follow section '### 3. Generate Wiki Files In wiki/' from .github/skills/wiki-sync/SKILL.md and refresh all generated pages under /wiki based on BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md files. Commit the refreshed /wiki changes to this PR branch only. Do not publish to the repository wiki in this step."
+            --body "@copilot rerun the 'wiki-sync' skill immediately for this updated PR branch with strict ordering. FIRST: refresh generated pages under /wiki from BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md sources, and commit only /wiki changes to this PR branch. SECOND: only after wiki commit completes, continue with review commentary. Do not post review comments before wiki sync is done. Do not publish to the repository wiki in this step."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
