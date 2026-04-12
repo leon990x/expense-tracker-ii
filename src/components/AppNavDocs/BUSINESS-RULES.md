@@ -4,8 +4,8 @@
 These rules define expected behavior for app routing and navigation documentation under src/app/components/AppNavDocs.
 
 ## Route Rules
-1. Navigation must include Dashboard route at /.
-2. Navigation must include Budget route at /budget.
+1. Navigation must include dashboard route at /.
+2. Navigation must include budget route at /budget.
 3. Route-to-label mapping must remain stable unless explicitly changed in requirements.
 
 ## Active State Rules
@@ -24,6 +24,6 @@ These rules define expected behavior for app routing and navigation documentatio
 3. Focus and contrast must remain visible for all navigation states.
 
 ## Consistency Rules
-1. Styling variants for active and inactive links should be centralized to prevent drift.
+1. Styling for active and inactive links should be centralized to prevent drift.
 2. Any new top-level route must update both implementation and corresponding docs.
-3. Changes to route behavior should be reflected in wiki-generated docs on the next sync.
+3. Changes to route behavior should be reflected in the source documentation in this directory when the implementation changes.
