@@ -1,7 +1,7 @@
 # App Navigation Business Rules
 
 ## Scope
-These rules define expected behavior for app navigation documentation under src/app/components/AppNavDocs.
+These rules define expected behavior for app routing and navigation documentation under src/app/components/AppNavDocs.
 
 ## Route Rules
 1. Navigation must include Dashboard route at /.
@@ -24,6 +24,6 @@ These rules define expected behavior for app navigation documentation under src/
 3. Focus and contrast must remain visible for all navigation states.
 
 ## Consistency Rules
-1. Styling variants for active and inactive links should be centralized to prevent drift.
+1. Styling variants for active and inactive links should be centralized to prevent drifting.
 2. Any new top-level route must update both implementation and corresponding docs.
 3. Changes to route behavior should be reflected in wiki-generated docs on the next sync.
