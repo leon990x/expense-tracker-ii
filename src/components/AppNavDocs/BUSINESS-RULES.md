@@ -24,6 +24,6 @@ These rules define expected behavior for app routing and navigation documentatio
 3. Focus and contrast must remain visible for all navigation states.
 
 ## Consistency Rules
-1. Styling variants for active and inactive links should be centralized to prevent drifting.
+1. Styling variants for active and inactive links should be centralized to prevent drift.
 2. Any new top-level route must update both implementation and corresponding docs.
 3. Changes to route behavior should be reflected in wiki-generated docs on the next sync.
