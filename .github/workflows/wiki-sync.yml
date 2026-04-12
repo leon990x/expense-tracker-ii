@@ -74,21 +74,21 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Copilot on PR opened
+      - name: Ask Copilot to generate wiki pages on PR opened
         if: github.event.action == 'opened'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "@copilot run the 'wiki-sync' skill on this branch with strict ordering. FIRST: follow section '### 3. Copy Source Docs to wiki/ with Prefixed Names' in .github/skills/wiki-sync/SKILL.md, generate/update /wiki pages from BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md files, and commit only /wiki changes to this PR branch. SECOND: only after that commit is complete, continue with any review commentary. Do not post review comments before wiki sync is done. Do not publish to the repository wiki in this step."
+            --body "@github-copilot Please run the **wiki-sync** skill now, following the instructions in \`.github/skills/wiki-sync/SKILL.md\` exactly. Execute in this strict order: (1) detect all new or changed documentation files in this PR (\`BUSINESS-RULES.md\`, \`TECHNICAL-NOTES.md\`, \`*.doc.md\`) compared to the base branch, (2) read and analyze each changed doc file, (3) generate or update the corresponding wiki page inside \`wiki/\` using the templates defined in SKILL.md step 3 — do NOT just copy the file contents verbatim, (4) update the aggregate index files \`wiki/Business-Rules.md\` and \`wiki/Technical-Notes.md\`, (5) commit only the \`wiki/\` changes to this PR branch, (6) only after the commit is pushed, provide any code review commentary. Do not post review comments before the wiki commit is complete."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ping Copilot on PR synchronize
+      - name: Ask Copilot to refresh wiki pages on PR synchronize
         if: github.event.action == 'synchronize'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "@copilot rerun the 'wiki-sync' skill immediately for this updated PR branch with strict ordering. FIRST: refresh generated pages under /wiki from BUSINESS-RULES.md, TECHNICAL-NOTES.md, and *.doc.md sources, and commit only /wiki changes to this PR branch. SECOND: only after wiki commit completes, continue with review commentary. Do not post review comments before wiki sync is done. Do not publish to the repository wiki in this step."
+            --body "@github-copilot This PR has been updated. Please rerun the **wiki-sync** skill (\`.github/skills/wiki-sync/SKILL.md\`) for the latest changes. Same strict order applies: (1) detect newly changed doc files vs. base branch, (2) analyze each one, (3) generate or update wiki pages in \`wiki/\` using the SKILL.md templates — do NOT copy verbatim, (4) regenerate aggregate index files, (5) commit only \`wiki/\` changes to this branch, (6) then provide review commentary."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

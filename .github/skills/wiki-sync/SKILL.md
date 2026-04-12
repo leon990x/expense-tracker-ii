@@ -12,7 +12,7 @@ Role boundary:
 - This skill must **never** clone, commit, or push to `<repo>.wiki.git`, and must not directly publish wiki content by interacting with the wiki remote.
 - When invoked by `wiki-sync.yml` on a PR branch, this skill **may** commit and push changes **only** to the `wiki/` folder of the current PR branch. It must not modify, stage, or commit any files outside of `wiki/`.
 - `wiki-sync.yml` is the only process that publishes `wiki/` content to the repository wiki (i.e., to `<repo>.wiki.git`).
-- In PR context, this skill must execute in strict order: (1) detect matching docs, (2) copy/update `wiki/` files, (3) commit `wiki/` changes, and only then (4) optionally provide review commentary. It must not review or comment on unrelated code before `wiki/` sync is complete.
+- In PR context, this skill must execute in strict order: (1) detect matching docs, (2) analyze each doc and **generate** (not copy) wiki pages into `wiki/`, (3) commit `wiki/` changes, and only then (4) optionally provide review commentary. It must not review or comment on unrelated code before `wiki/` sync is complete.
 
 ## Steps
 
@@ -54,17 +54,11 @@ Special classification rules:
 - Preserve source path metadata for each section so wiki readers can trace origin.
 - Do not drop or summarize away policy content; preserve rule and constraint statements verbatim where possible.
 
-### 3. Copy Source Docs to `wiki/` with Prefixed Names
+### 3. Generate Wiki Pages from Source Docs
 
-#### 3a. PR context — copy new or changed files
+**Critical:** Do not copy source files verbatim into `wiki/`. Instead, **read each source doc, analyze its content, and generate a well-structured wiki page** that follows the wiki page templates below. If a wiki page already exists for that source, update it in place rather than replacing it wholesale — preserve any hand-edited sections that are not covered by the source doc.
 
-Execution-order requirement for PR context:
-- Complete this copy/update step before any review comments are posted.
-- If `wiki/` changes are needed, ensure they are committed first.
-
-When invoked on a PR branch, detect which source doc files are **new or changed** in the PR (compared to the base branch) and copy each one into `wiki/` using the following naming convention:
-
-**Output name rules:**
+#### 3a. Output naming convention
 
 | Source file pattern | Output name in `wiki/` |
 |---|---|
@@ -77,34 +71,95 @@ Where:
 - `<Stem>` for a `*.doc.md` file is the base name with `.doc.md` stripped (e.g., `ExpenseForm.doc.md` → stem `ExpenseForm`).
 
 Examples:
-- `src/components/AppNavigation/Business-Rules.md` → `wiki/AppNavigation-Business-Rules.md`
-- `src/components/BudgetDashboard/Technical-Notes.md` → `wiki/BudgetDashboard-Technical-Notes.md`
+- `src/components/AppNavigation/BUSINESS-RULES.md` → `wiki/AppNavigation-Business-Rules.md`
+- `src/components/BudgetDashboard/TECHNICAL-NOTES.md` → `wiki/BudgetDashboard-Technical-Notes.md`
 - `src/components/docs/ExpenseForm.doc.md` → `wiki/ExpenseForm-Doc.md`
 
-To detect changed files on a PR branch use:
+#### 3b. PR context — generate pages for new or changed files
+
+Execution-order requirement:
+- Complete wiki generation and commit **before** posting any review commentary on the PR.
+
+Detect which source doc files are **new or changed** in the PR (compared to the base branch):
 ```bash
 git diff --name-only origin/HEAD...HEAD
 ```
-Then filter that list to include only files matching the source document patterns.
+Filter to files matching the source document patterns, excluding `wiki/`.
 
-Per-file copy requirements:
-- Write the full source file content into the output wiki path.
-- Add a source-attribution header at the top of each copied page: `> Source: <original-repo-path>`.
-- If the output file already exists, overwrite it.
+For each changed source doc, read its content and generate the corresponding wiki page using the appropriate template below.
 
-#### 3b. Maintain aggregate index files
+#### 3c. Wiki page templates
 
-After copying, regenerate the two aggregate index files:
+**Business Rules page** (`*-Business-Rules.md`):
+```markdown
+# <ParentFolder> — Business Rules
+
+> Source: <original-repo-path>  
+> Last updated: <ISO date>
+
+## Overview
+<One-paragraph summary of what this component/module does and why these rules exist.>
+
+## Rules
+<Organize all rules from the source into numbered or bulleted sections. Group related rules under descriptive sub-headings. Preserve rule statements verbatim — do not paraphrase policy.>
+
+## Related Pages
+<Links to related wiki pages if they exist.>
+```
+
+**Technical Notes page** (`*-Technical-Notes.md`):
+```markdown
+# <ParentFolder> — Technical Notes
+
+> Source: <original-repo-path>  
+> Last updated: <ISO date>
+
+## Overview
+<One-paragraph summary of the technical context.>
+
+## Notes
+<Organize all notes from the source by topic with descriptive sub-headings. Preserve technical details verbatim.>
+
+## Related Pages
+<Links to related wiki pages if they exist.>
+```
+
+**Component Doc page** (`*-Doc.md`):
+```markdown
+# <ComponentName>
+
+> Source: <original-repo-path>  
+> Last updated: <ISO date>
+
+## Purpose
+<One-paragraph description of what this component does.>
+
+## Props / Public Contract
+<Table or list of props, types, required/optional, and descriptions derived from the source doc.>
+
+## Behavior
+<Key behavioral rules, lifecycle notes, and UX states drawn from the source doc.>
+
+## Usage Example
+<Code snippet or integration guidance if present in the source doc.>
+
+## Related Pages
+<Links to related wiki pages if they exist.>
+```
+
+#### 3d. Maintain aggregate index files
+
+After generating pages, regenerate the two aggregate index files:
 
 **`wiki/Business-Rules.md`** — index of all `*-Business-Rules.md` pages in `wiki/`:
-- One entry per copied file with a link and the source path.
+- One entry per page with a link and the source path.
 
 **`wiki/Technical-Notes.md`** — index of all `*-Technical-Notes.md` pages in `wiki/`:
-- One entry per copied file with a link and the source path.
+- One entry per page with a link and the source path.
 
-#### 3c. Main branch — full sync
+#### 3e. Main branch — full sync
 
-When invoked on the `main` branch (not a PR), process **all** matching source docs (not just changed ones) and apply the same copy-with-prefix rules above to ensure `wiki/` is fully up to date.
+When invoked on the `main` branch (not a PR), process **all** matching source docs (not just changed ones) and generate/update all corresponding wiki pages to ensure `wiki/` is fully up to date.
 
 ### 4. Validate Wiki Folder Output
 
