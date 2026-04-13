@@ -68,7 +68,7 @@ Date input is normalized with a midday timestamp (`${date}T12:00:00`) before cal
 ## UX States
 | State | Behavior |
 |---|---|
-| Pending | Submit button shows `Saving…` and becomes disabled |
+| Pending | Submit button showing `Saving…` and becomes disabled |
 | Error | Error message rendered in rose text; form stays open |
 | Success | Form resets; `onClose()` called |
 
