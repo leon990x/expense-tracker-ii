@@ -14,7 +14,7 @@
 
 ## Why This Is a Client Component
 
-`AppNavigation` carries the `"use client"` directive because it calls `usePathname()` from `next/navigation`. `usePathname()` reads the current browser URL and is only available in the client rendering environment. Server components cannot re-render in response to navigation, so active state detection must always happen on the client.
+`AppNavigation` carries the `"use client"` directive because it calls `usePathname()` from `next/navigation`. `usePathname()` reads the current browser URL and is only available in the client rendering environment. Server components cannot re-render in response to navigation, so active state detection must happen on the client.
 
 ## Active State Implementation
 

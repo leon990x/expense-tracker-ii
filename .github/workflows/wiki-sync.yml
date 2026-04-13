@@ -154,6 +154,16 @@ jobs:
     if: needs.post-instructions.outputs.should_assign == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Remove existing Copilot review request (if any)
+        continue-on-error: true
+        run: |
+          gh api \
+            --method DELETE \
+            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
+            --field 'reviewers[]=copilot-pull-request-reviewer'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Assign Copilot as reviewer
         continue-on-error: true
         run: |
