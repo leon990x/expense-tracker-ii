@@ -7,12 +7,11 @@ When reviewing any pull request, you MUST complete the wiki-sync task BEFORE pos
 Execute these steps in order — do not skip ahead:
 
 1. Detect source docs changed in this PR vs the base branch (patterns: `BUSINESS-RULES.md`, `TECHNICAL-NOTES.md`, `*.doc.md`; exclude `wiki/`).
-2. If no matching files are found, proceed directly to code review.
-3. Read and analyze each changed source doc.
-4. Generate the corresponding `wiki/` page using the templates in `.github/skills/wiki-sync/SKILL.md` §3c. Do NOT copy file contents verbatim.
-5. Regenerate `wiki/Business-Rules.md` and `wiki/Technical-Notes.md` aggregate indexes.
-6. Stage only `wiki/` files, commit with message `docs: sync wiki pages [wiki-sync]`, and push to this branch.
-7. Only after the push is confirmed may you add code review commentary.
+2. Read and analyze each changed source doc.
+3. Generate the corresponding `wiki/` page using the templates in `.github/skills/wiki-sync/SKILL.md` §3c. Do NOT copy file contents verbatim.
+4. Regenerate `wiki/Business-Rules.md` and `wiki/Technical-Notes.md` aggregate indexes.
+5. Stage only `wiki/` files, commit with message `docs: sync wiki pages [wiki-sync]`, and push to this branch.
+6. Only after the push is confirmed may you add code review commentary.
 
 ---
 
