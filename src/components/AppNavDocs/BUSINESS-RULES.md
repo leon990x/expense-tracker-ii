@@ -1,7 +1,7 @@
 # AppNavigation — Business Rules
 
 ## Scope
-These rules define expected behavior for the `AppNavigation` component (`src/components/AppNavigation.tsx`) and the app-level routing it governs.
+These rules define expected behavior for `AppNavigation` component (`src/components/AppNavigation.tsx`) and the app-level routing it governs.
 
 ## Route Rules
 1. Navigation must expose exactly two top-level destinations: Dashboard (`/`) and Budget (`/budget`).
