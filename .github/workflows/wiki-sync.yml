@@ -70,9 +70,11 @@ jobs:
               HEAD:master
           fi
 
-  ping-copilot:
+  post-instructions:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    outputs:
+      should_assign: ${{ steps.set-assign.outputs.should_assign }}
     steps:
       - name: Checkout repository (synchronize only)
         if: github.event.action == 'synchronize'
@@ -116,17 +118,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Assign Copilot as reviewer on PR opened
-        if: github.event.action == 'opened'
-        continue-on-error: true
-        run: |
-          gh api \
-            --method POST \
-            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
-            --field 'reviewers[]=copilot-pull-request-reviewer'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Post wiki-sync instructions on PR synchronize
         if: github.event.action == 'synchronize' && steps.detect.outputs.has_doc_changes == 'true'
         run: |
@@ -147,8 +138,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Assign Copilot as reviewer on PR synchronize
-        if: github.event.action == 'synchronize' && steps.detect.outputs.has_doc_changes == 'true'
+      - name: Set assign output
+        id: set-assign
+        run: |
+          if [[ "${{ github.event.action }}" == "opened" ]] || \
+             { [[ "${{ github.event.action }}" == "synchronize" ]] && \
+               [[ "${{ steps.detect.outputs.has_doc_changes }}" == "true" ]]; }; then
+            echo "should_assign=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_assign=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  assign-copilot:
+    needs: post-instructions
+    if: needs.post-instructions.outputs.should_assign == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign Copilot as reviewer
         continue-on-error: true
         run: |
           gh api \
@@ -158,8 +164,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  trigger-wiki-sync:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
       - name: Trigger wiki-sync after PR merge
-        if: github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           gh workflow run wiki-sync.yml --repo ${{ github.repository }} --ref main
         env:
