@@ -18,7 +18,7 @@ jobs:
          gh extension install github/gh-copilot
      - name: Targeted Agent Execution
        env:
-         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         GH_TOKEN: ${{ github.token }}
        run: |
          # We instruct the agent to focus strictly on your three extensions
          gh copilot /delegate \
