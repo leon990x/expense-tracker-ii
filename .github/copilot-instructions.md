@@ -1,17 +1,14 @@
-### **Pull Request Review Instructions**
-
-When reviewing any pull request, you MUST complete the wiki-sync task BEFORE posting any code review comments.
-
-⛔ DO NOT post any review comments until after you have committed `wiki/` changes to the branch.
-
-Execute these steps in order — do not skip ahead:
-
-1. Detect source docs changed in this PR vs the base branch (patterns: `BUSINESS-RULES.md`, `TECHNICAL-NOTES.md`, `*.doc.md`; exclude `wiki/`).
-2. Read and analyze each changed source doc.
-3. Generate the corresponding `wiki/` page using the templates in `.github/skills/wiki-sync/SKILL.md` §3c. Do NOT copy file contents verbatim.
-4. Regenerate `wiki/Business-Rules.md` and `wiki/Technical-Notes.md` aggregate indexes.
-5. Stage only `wiki/` files, commit with message `docs: sync wiki pages [wiki-sync]`, and push to this branch.
-6. Only after the push is confirmed may you add code review commentary.
+# Targeted Documentation Agent
+Objective: Update specific documentation types based on code changes in the PR.
+**Target Extensions:**
+- `*.doc.md` (General documentation)
+- `*.business-rule.md` (Logic and requirements)
+- `*.technical-notes.md` (Implementation details)
+**Rules:**
+1. **Discovery:** Scan the entire workspace for files with the above extensions.
+2. **Analysis:** If a code change impacts the content of any of these files, update them in their current location.
+3. **Wiki Integration:** After updating local files, find the most relevant corresponding file in the `/wiki` folder and sync the changes there.
+4. **Consistency:** Ensure that business rules in `*.business-rule.md` remain the "Source of Truth" for the Wiki's business logic section.
 
 ---
 
