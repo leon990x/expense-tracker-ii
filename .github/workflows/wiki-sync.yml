@@ -10,6 +10,8 @@ on:
   pull_request:
     types: [opened, synchronize, closed]
     paths-ignore: ['wiki/**']
+  pull_request_review:
+    types: [submitted]
 
 permissions:
   actions: write
@@ -71,11 +73,21 @@ jobs:
           fi
 
   ping-copilot:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
     runs-on: ubuntu-latest
     steps:
-      - name: Post wiki-sync instructions on PR opened
-        if: github.event.action == 'opened'
+      - name: Assign Copilot as reviewer on PR opened
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        run: |
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
+            --field 'reviewers[]=copilot-pull-request-reviewer'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post wiki-sync instructions after Copilot initial review
+        if: github.event_name == 'pull_request_review' && github.event.review.user.login == 'copilot-pull-request-reviewer'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
@@ -94,8 +106,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Assign Copilot as reviewer on PR opened
-        if: github.event.action == 'opened'
+      - name: Re-assign Copilot after initial review
+        if: github.event_name == 'pull_request_review' && github.event.review.user.login == 'copilot-pull-request-reviewer'
         run: |
           gh api \
             --method POST \
@@ -105,7 +117,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Post wiki-sync instructions on PR synchronize
-        if: github.event.action == 'synchronize'
+        if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
@@ -125,7 +137,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Re-assign Copilot as reviewer on PR synchronize
-        if: github.event.action == 'synchronize'
+        if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
         run: |
           gh api \
             --method POST \
@@ -135,7 +147,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger wiki-sync after PR merge
-        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           gh workflow run wiki-sync.yml --repo ${{ github.repository }} --ref main
         env:
