@@ -86,11 +86,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Post wiki-sync instructions after Copilot initial review
+      - name: Post wiki-sync instructions and re-assign after Copilot initial review
         if: github.event_name == 'pull_request_review' && github.event.review.user.login == 'copilot-pull-request-reviewer'
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO=${{ github.repository }}
+
+          # Only act on the very first review from Copilot to prevent an infinite loop.
+          # Every subsequent Copilot review (e.g. after wiki-sync) would otherwise
+          # re-trigger this step and re-assign indefinitely.
+          review_count=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json reviews \
+            --jq '[.reviews[] | select(.author.login == "copilot-pull-request-reviewer")] | length')
+
+          if [ "$review_count" -ne 1 ]; then
+            echo "Copilot review count is $review_count — not the initial review, skipping."
+            exit 0
+          fi
+
+          gh pr comment "$PR_NUMBER" \
+            --repo "$REPO" \
             --body "**Invoke skill: wiki-sync**
 
           ⛔ DO NOT post any review comments until after you have committed \`wiki/\` changes to this branch.
@@ -103,15 +117,10 @@ jobs:
           4. Regenerate \`wiki/Business-Rules.md\` and \`wiki/Technical-Notes.md\` aggregate indexes.
           5. Stage only \`wiki/\` files, commit with message \`docs: sync wiki pages [wiki-sync]\`, and push to this branch.
           6. Only after the push is confirmed may you add optional review commentary."
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Re-assign Copilot after initial review
-        if: github.event_name == 'pull_request_review' && github.event.review.user.login == 'copilot-pull-request-reviewer'
-        run: |
           gh api \
             --method POST \
-            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
+            "/repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
             --field 'reviewers[]=copilot-pull-request-reviewer'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
