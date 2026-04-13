@@ -78,6 +78,7 @@ jobs:
     steps:
       - name: Assign Copilot as reviewer on PR opened
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        continue-on-error: true
         run: |
           gh api \
             --method POST \
@@ -121,7 +122,7 @@ jobs:
           gh api \
             --method POST \
             "/repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
-            --field 'reviewers[]=copilot-pull-request-reviewer'
+            --field 'reviewers[]=copilot-pull-request-reviewer' || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -147,6 +148,7 @@ jobs:
 
       - name: Re-assign Copilot as reviewer on PR synchronize
         if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
+        continue-on-error: true
         run: |
           gh api \
             --method POST \
