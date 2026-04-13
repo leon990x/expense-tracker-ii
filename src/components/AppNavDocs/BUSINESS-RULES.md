@@ -1,29 +1,33 @@
-# App Navigation Business Rules
+# AppNavigation — Business Rules
 
 ## Scope
-These rules define expected behavior for app routing and navigation documentation under the path: src/app/components/AppNavDocs.
+These rules define expected behavior for the `AppNavigation` component (`src/components/AppNavigation.tsx`) and the app-level routing it governs.
 
 ## Route Rules
-1. Navigation must include dashboard route at /.
-2. Navigation must include budget route at /budget.
-3. Route-to-label mapping must remain stable unless explicitly changed in requirements.
+1. Navigation must expose exactly two top-level destinations: Dashboard (`/`) and Budget (`/budget`).
+2. Route-to-label mapping must remain stable unless explicitly changed in requirements.
+3. Any new top-level route must update both the component implementation and the docs in this directory.
 
 ## Active State Rules
 1. Only one navigation item can be active at a time.
-2. Active state must be based on exact pathname matching.
-3. Inactive links must not visually appear active.
+2. Active state is determined by **exact pathname equality** (`pathname === href`) using `usePathname()` from `next/navigation`. Partial or prefix matching must not be used.
+3. Inactive links must not visually appear active under any circumstance, including during client-side navigation transitions.
+4. All active and inactive style variants are centralized in `getTileClassName(href)` — do not derive or override active styles outside this function.
+5. The active variant applies: `border-sky-300 bg-slate-50 text-sky-800`.
+6. The inactive variant applies: `border-slate-200 bg-slate-50 text-slate-700` with hover state `hover:border-slate-300 hover:bg-slate-100`.
+7. Adding a new style state (e.g. disabled, loading) requires adding a dedicated branch inside `getTileClassName` — do not use inline ternaries on `<Link>` elements.
 
 ## Interaction Rules
-1. Navigation entries must use link semantics for keyboard and browser compatibility.
-2. Hover treatment applies to inactive links only.
-3. Navigation must remain available wherever top-level route switching is expected.
+1. Navigation entries must use `next/link` for client-side route transitions.
+2. Hover treatment applies to inactive links only; active links must not show a hover style.
+3. Navigation must remain visible and consistent across all pages where the main app shell (`RootLayout`) is rendered.
 
 ## Accessibility Rules
-1. Primary navigation must be wrapped in a nav container with an appropriate aria-label.
-2. Destination labels must be clear and human-readable.
+1. The navigation container must use a `<nav>` element with `aria-label="Primary"`.
+2. Link text must be the accessible name — do not hide it behind icons without a visible label.
 3. Focus and contrast must remain visible for all navigation states.
 
-## Consistency Rules
-1. Styling for active and inactive links should be centralized to prevent drift.
-2. Any new top-level route must update both implementation and corresponding docs.
-3. Changes to routing behavior should be reflected in the source documentation in this directory when the implementation changes.
+## Implementation Notes
+1. `AppNavigation.tsx` is a client component because it reads `usePathname()`.
+2. Style logic must stay in `getTileClassName` — do not inline conditional classes directly on `<Link>` elements.
+3. Changes to routing behavior must be reflected in this document and in `src/components/docs/BUSINESS-RULES.md`.
