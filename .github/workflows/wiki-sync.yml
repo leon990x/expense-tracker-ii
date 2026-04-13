@@ -70,11 +70,9 @@ jobs:
               HEAD:master
           fi
 
-  post-instructions:
+  trigger-copilot:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    outputs:
-      should_assign: ${{ steps.set-assign.outputs.should_assign }}
     steps:
       - name: Checkout repository (synchronize only)
         if: github.event.action == 'synchronize'
@@ -98,16 +96,16 @@ jobs:
             echo "No doc file changes detected — skipping wiki-sync."
           fi
 
-      - name: Post wiki-sync instructions on PR opened
+      - name: Trigger Copilot coding agent on PR opened
         if: github.event.action == 'opened'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "**Invoke skill: wiki-sync**
+            --body "@copilot Please run the wiki-sync skill before doing anything else.
 
           ⛔ DO NOT post any review comments until after you have committed \`wiki/\` changes to this branch.
 
-          Your sole task right now is to run the wiki-sync skill. Read \`.github/skills/wiki-sync/SKILL.md\` and execute every step in this exact order — do not skip ahead:
+          Read \`.github/skills/wiki-sync/SKILL.md\` and execute every step in this exact order:
 
           1. Detect source docs changed in this PR vs the base branch (patterns: \`BUSINESS-RULES.md\`, \`TECHNICAL-NOTES.md\`, \`*.doc.md\`; exclude \`wiki/\`).
           2. Read and analyze each changed source doc.
@@ -118,16 +116,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Post wiki-sync instructions on PR synchronize
+      - name: Trigger Copilot coding agent on PR synchronize
         if: github.event.action == 'synchronize' && steps.detect.outputs.has_doc_changes == 'true'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
-            --body "**Invoke skill: wiki-sync** (PR updated)
+            --body "@copilot This PR has new commits with documentation changes. Please re-run the wiki-sync skill.
 
           ⛔ DO NOT post any review comments until after you have committed \`wiki/\` changes to this branch.
 
-          This PR has new commits. Re-run the wiki-sync skill for the latest changes. Read \`.github/skills/wiki-sync/SKILL.md\` and execute every step in this exact order — do not skip ahead:
+          Read \`.github/skills/wiki-sync/SKILL.md\` and execute every step in this exact order:
 
           1. Detect source docs changed in this PR vs the base branch (patterns: \`BUSINESS-RULES.md\`, \`TECHNICAL-NOTES.md\`, \`*.doc.md\`; exclude \`wiki/\`).
           2. Read and analyze each changed source doc.
@@ -135,42 +133,6 @@ jobs:
           4. Regenerate \`wiki/Business-Rules.md\` and \`wiki/Technical-Notes.md\` aggregate indexes.
           5. Stage only \`wiki/\` files, commit with message \`docs: sync wiki pages [wiki-sync]\`, and push to this branch.
           6. Only after the push is confirmed may you add optional review commentary."
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set assign output
-        id: set-assign
-        run: |
-          if [[ "${{ github.event.action }}" == "opened" ]] || \
-             { [[ "${{ github.event.action }}" == "synchronize" ]] && \
-               [[ "${{ steps.detect.outputs.has_doc_changes }}" == "true" ]]; }; then
-            echo "should_assign=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_assign=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  assign-copilot:
-    needs: post-instructions
-    if: needs.post-instructions.outputs.should_assign == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Remove existing Copilot review request (if any)
-        continue-on-error: true
-        run: |
-          gh api \
-            --method DELETE \
-            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
-            --field 'reviewers[]=copilot-pull-request-reviewer'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Assign Copilot as reviewer
-        continue-on-error: true
-        run: |
-          gh api \
-            --method POST \
-            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
-            --field 'reviewers[]=copilot-pull-request-reviewer'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
