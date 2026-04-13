@@ -10,9 +10,12 @@ These rules define expected behavior for the `AppNavigation` component (`src/com
 
 ## Active State Rules
 1. Only one navigation item can be active at a time.
-2. Active state is determined by exact pathname equality (`pathname === href`) via `usePathname()` from `next/navigation`.
-3. Inactive links must not visually appear active.
-4. Active and inactive style variants are centralized in `getTileClassName(href)` to prevent styling drift.
+2. Active state is determined by **exact pathname equality** (`pathname === href`) using `usePathname()` from `next/navigation`. Partial or prefix matching must not be used.
+3. Inactive links must not visually appear active under any circumstance, including during client-side navigation transitions.
+4. All active and inactive style variants are centralized in `getTileClassName(href)` — do not derive or override active styles outside this function.
+5. The active variant applies: `border-sky-300 bg-slate-50 text-sky-800`.
+6. The inactive variant applies: `border-slate-200 bg-slate-50 text-slate-700` with hover state `hover:border-slate-300 hover:bg-slate-100`.
+7. Adding a new style state (e.g. disabled, loading) requires adding a dedicated branch inside `getTileClassName` — do not use inline ternaries on `<Link>` elements.
 
 ## Interaction Rules
 1. Navigation entries must use `next/link` for client-side route transitions.
