@@ -16,8 +16,9 @@ jobs:
      - name: Auth GitHub CLI
        run: |
          gh extension install github/gh-copilot
-         echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
      - name: Targeted Agent Execution
+       env:
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        run: |
          # We instruct the agent to focus strictly on your three extensions
          gh copilot /delegate \
